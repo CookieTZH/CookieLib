@@ -481,7 +481,7 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   <!-- 左侧栏 -->
   <aside class="side">
     <section class="card acrylic profile">
-      <div class="avatar"><img data-asset="images/avatar/avatar.jpg" alt="头像"></div>
+      <div class="avatar"><img data-asset="pictures/avatar/avatar.jpg" alt="头像"></div>
       <div class="profile-text">
         <div class="profile-name">海棠花下</div>
         <div class="profile-sig">喜欢折腾代码的学生 · 信息技术拓展社团</div>
@@ -534,7 +534,7 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
         <button class="nf-home" id="nfHome">返回首页</button>
       </div>
       <div class="nf-right">
-        <img data-asset="images/404/ciallo.png" alt="Ciallo 角色">
+        <img data-asset="pictures/404/ciallo.png" alt="Ciallo 角色">
       </div>
     </div>
   </div>
@@ -548,10 +548,10 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
     <div class="group-title">背景图片</div>
     <div class="bg-picker" id="bgPicker">
       <button class="bg-thumb" data-bg="dark">
-        <span class="thumb" data-asset="images/background/dark.jpg"></span>
+        <span class="thumb" data-asset="pictures/background/dark.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="wp">
-        <span class="thumb" data-asset="images/background/wp.jpg"></span>
+        <span class="thumb" data-asset="pictures/background/wp.jpg"></span>
       </button>
     </div>
   </div>
@@ -609,13 +609,13 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 
 <script>
 /* ================= 数据 ================= */
-/* 方案 B：文章清单在 posts/index.json，逐篇文件在 posts/<id>.json。
+/* 方案 B：文章清单在 articles/index.json，逐篇文件在 articles/<id>.json。
  * 启动时 fetch 清单，逐篇加载正文，再渲染列表。加文章 = 新增一个 json 文件 + 在 index.json 登记一条。 */
 var posts = [];
 
 /* ================= 站点根路径 =================
  * 站点可部署在任意子路径（GitHub Pages 的 /repo/），也会被 SPA 回退
- * 服务在深层路径上（如 /images/sb）。这里推断站点根目录：
+ * 服务在深层路径上（如 /pictures/sb）。这里推断站点根目录：
  * 常规路径（/ 或 /index.html 结尾）同步可得；深层路径启动后逐级向上探测。
  */
 var BASE=(function(){
@@ -638,7 +638,7 @@ function ensureBase(){
   /* 逐个候选根尝试拉取文章清单，能返回合法 JSON 的即为站点根 */
   return cands.reduce(function(pr,c){
     return pr.catch(function(){
-      return fetch(c+'posts/index.json').then(function(r){
+      return fetch(c+'articles/index.json').then(function(r){
         if(!r.ok)throw 0;
         return r.json();
       }).then(function(j){
@@ -678,7 +678,7 @@ var wpLayers=[el('wpA'),el('wpB')],wpActive=0,lastBg=null;
 function setWallpaper(bg,instant){
   if(bg===lastBg)return;
   var next=wpLayers[1-wpActive],cur=wpLayers[wpActive];
-  next.style.backgroundImage='url("'+assetUrl('images/background/'+bg+'.jpg')+'")';
+  next.style.backgroundImage='url("'+assetUrl('pictures/background/'+bg+'.jpg')+'")';
   if(instant){
     next.style.transition='none';next.style.opacity='1';void next.offsetWidth;next.style.transition='';
     cur.style.transition='none';cur.style.opacity='0';void cur.offsetWidth;cur.style.transition='';
@@ -730,7 +730,7 @@ function openArticle(p){
   readerBody.innerHTML='<div class="reader-inner">'
     +'<h1 class="reader-title" id="readerTitle">'+p.title+'</h1>'
     +'<div class="reader-credits">'
-      +'<div class="reader-avatar"><img src="'+assetUrl('images/avatar/avatar.jpg')+'" alt="头像"></div>'
+      +'<div class="reader-avatar"><img src="'+assetUrl('pictures/avatar/avatar.jpg')+'" alt="头像"></div>'
       +'<div class="reader-by">'
         +'<span class="reader-name">海棠花下</span>'
         +'<span class="reader-home">SmartTeachNanfang-Club · 信息技术拓展社团</span>'
@@ -887,7 +887,7 @@ el('nfClose').addEventListener('click',goHome);
 el('nfHome').addEventListener('click',goHome);
 
 /* ================= 路由 =================
- * 路径级：只有站点根是有效地址，其余路径（如 /images/sb）一律 404；
+ * 路径级：只有站点根是有效地址，其余路径（如 /pictures/sb）一律 404；
  * 哈希级：#/ 首页 | #/post/<id> 文章 | 其他任何值 404。
  */
 function isRootPath(){
@@ -966,18 +966,18 @@ ensureBase().then(function(){
 function loadPosts(){
   var list=el('postList');
   list.innerHTML='<div class="post-loading">正在加载文章…</div>';
-  return fetch(assetUrl('posts/index.json'))
+  return fetch(assetUrl('articles/index.json'))
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .then(function(manifest){
       /* 顺序以 index.json 为准（想调文章顺序，改清单即可） */
       var items = (manifest.posts || []);
-      if(!items.length){ list.innerHTML='<div class="post-empty">还没有文章，去 posts/ 目录添加吧。</div>'; return; }
+      if(!items.length){ list.innerHTML='<div class="post-empty">还没有文章，去 articles/ 目录添加吧。</div>'; return; }
       /* 逐篇拉取正文 */
       var seq = Promise.resolve();
       var loaded = [];
       items.forEach(function(meta){
         seq = seq.then(function(){
-          return fetch(assetUrl('posts/'+meta.file))
+          return fetch(assetUrl('articles/'+meta.file))
             .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
             .then(function(p){
               p.id = p.id || meta.id;
