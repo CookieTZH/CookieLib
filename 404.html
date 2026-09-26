@@ -308,16 +308,12 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
 .code-copy:active{transform:scale(.95)}
 .code-copy svg{width:14px;height:14px;display:block}
 .code-copy.copied{color:#6ccb5f;border-color:rgba(108,203,95,.45)}
-/* 触屏设备：无悬停，按钮常驻右上角。为免遮挡代码，给代码块右上角
- * 叠一层「渐变到黑」的遮罩，把按钮下方区域自然让出来，代码渐隐、按钮清晰 */
+/* 触屏设备：无悬停，按钮常驻右上角。
+ * 保持代码一行 + 横向滑动（pre 默认 white-space:pre + overflow:auto）；
+ * 顶部留出按钮专属空白区，文字从按钮下方开始，横向滑动时不遮挡 */
 @media (hover:none){
   .code-copy{opacity:1;transform:none;pointer-events:auto}
-  .code-block pre{position:relative;margin:16px 0}
-  .code-block pre::after{
-    content:"";position:absolute;top:0;right:0;pointer-events:none;
-    width:118px;height:38px;border-radius:0 8px 0 0;
-    background:linear-gradient(90deg,rgba(30,30,30,0) 0%,#1e1e1e 72%);
-  }
+  .code-block pre{margin:16px 0;padding-top:52px}
   .code-copy:active{transform:scale(.95)}
 }
 
