@@ -154,12 +154,18 @@ body{
 }
 .reveal:hover::before{opacity:1;transition:opacity var(--dur-faster) var(--ease-out)}
 .reveal:not(:hover)::before{transition:opacity var(--dur-normal) var(--ease-in)}
+/* 触屏设备：无 pointer，reveal 光斑无意义，直接禁用（省电省性能） */
+@media (hover:none){
+  .reveal::before{display:none}
+  .post:active,.github:active{transform:scale(.98)}
+  .post:active{box-shadow:0 4px 14px rgba(0,0,0,.16)}
+}
 
 /* ---------- 桌面布局 ---------- */
 .desktop{
   position:relative;z-index:1;
   display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;
-  height:100vh;padding:20px;
+  height:100vh;height:100dvh;padding:20px;
 }
 .side{display:flex;flex-direction:column;gap:14px;min-height:0}
 .side-reserved{flex:1}/* 左下角留白，为以后准备 */
@@ -284,6 +290,25 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
 .reader-content pre{background:#1e1e1e;color:#e8e8e8;padding:14px 16px;border-radius:8px;font-size:13px;overflow:auto;font-family:Consolas,"Cascadia Code",monospace;margin:16px 0}
 .reader-content code{font-family:Consolas,"Cascadia Code",monospace;font-size:.9em;background:rgba(128,128,128,.18);padding:1px 6px;border-radius:4px}
 .reader-content pre code{background:none;padding:0}
+/* 代码块复制按钮：Fluent 图标，悬停代码块时右上角浮现 */
+.reader-content .code-block{position:relative}
+.code-copy{
+  position:absolute;top:10px;right:10px;z-index:1;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:6px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.09);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  color:#e8e8e8;font-size:12px;font-weight:500;font-family:inherit;
+  opacity:0;transform:translateY(-3px);pointer-events:none;
+  transition:opacity var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out);
+}
+.code-block:hover .code-copy,.code-copy:focus-visible{opacity:1;transform:none;pointer-events:auto}
+.code-copy:hover{background:rgba(255,255,255,.17)}
+.code-copy:active{transform:scale(.95)}
+.code-copy svg{width:14px;height:14px;display:block}
+.code-copy.copied{color:#6ccb5f;border-color:rgba(108,203,95,.45)}
+@media (hover:none){.code-copy{opacity:1;transform:none;pointer-events:auto}}
 .reader-content strong{font-weight:600}
 .reader-content img{max-width:100%;border-radius:8px;margin:16px 0}
 .reader-close{
@@ -420,11 +445,26 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   .profile-name{font-size:16px}
   .github{flex:1 1 auto}
   .side-reserved{display:none}
-  .flyout{left:12px;right:12px;width:auto;bottom:78px}
+  /* 底部抽屉：从屏幕底部滑出，全宽、顶部圆角，拇指热区友好 */
+  .flyout{
+    left:0;right:0;bottom:0;width:100%;
+    max-width:100vw;border-radius:16px 16px 0 0;
+    padding:20px 20px 24px;
+    transform:translateY(100%);
+  }
+  .flyout.show{transform:none}
+  /* 设置入口徽标移到右下角，避免遮挡抽屉内容 */
+  .start{right:12px;bottom:12px;width:40px;height:40px}
+  /* 抽屉打开时徽标下滑隐藏，关闭时恢复 */
+  .start.open{transform:translateY(72px);pointer-events:none}
   .reader{margin:0;border-radius:0}
   .reader-close{top:14px;right:16px}
   .reader-inner{padding:36px 22px 60px}
   .reader-title{font-size:24px}
+  /* 低端安卓 GPU 压力大，移动端降低 blur 半径保流畅 */
+  .acrylic{-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%)}
+  .acrylic-strong{-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%)}
+  .reader{-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%)}
 }
 </style>
 </head>
@@ -702,6 +742,7 @@ function openArticle(p){
     +'</div>'
     +'<div class="reader-content">'+p.content+'</div>'
   +'</div>';
+  enhanceCodeBlocks(readerBody);
   readerLayer.hidden=false;overlay.hidden=false;
   requestAnimationFrame(function(){requestAnimationFrame(function(){
     readerLayer.classList.add('show');overlay.classList.add('show');
@@ -718,6 +759,54 @@ function closeArticle(){
 }
 el('readerClose').addEventListener('click',goHome);
 overlay.addEventListener('click',goHome);
+
+/* ================= 代码块复制 =================
+ * 阅读页渲染后为每个 <pre> 包一层容器并挂 Fluent 复制按钮：
+ * 悬停浮现（WinUI 曲线），点击复制正文并显示 Copied!，1.6s 后还原 */
+function enhanceCodeBlocks(root){
+  root.querySelectorAll('.reader-content pre').forEach(function(pre){
+    var parent=pre.parentNode;
+    if(parent.classList&&parent.classList.contains('code-block'))return;
+    var wrap=document.createElement('div');
+    wrap.className='code-block';
+    parent.insertBefore(wrap,pre);
+    wrap.appendChild(pre);
+    var btn=document.createElement('button');
+    btn.className='code-copy';btn.type='button';btn.setAttribute('aria-label','复制代码');
+    btn.innerHTML='<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">'
+      +'<rect x="6.75" y="2.75" width="10.5" height="10.5" rx="2.25" stroke="currentColor" stroke-width="1.5"/>'
+      +'<path d="M13.25 13.25v1.8a2.2 2.2 0 0 1-2.2 2.2H4.95a2.2 2.2 0 0 1-2.2-2.2V8.95a2.2 2.2 0 0 1 2.2-2.2h1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+      +'</svg><span class="cc-label">复制</span>';
+    wrap.appendChild(btn);
+    btn.addEventListener('click',function(){
+      var code=pre.querySelector('code')||pre;
+      copyText(code.innerText).then(function(){flashCopied(btn)},function(){flashCopied(btn)});
+    });
+  });
+}
+function copyText(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text);
+  }
+  /* 非安全上下文（http 等）的降级方案 */
+  return new Promise(function(res,rej){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;top:-999px;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy')?res():rej(new Error('copy failed'));}
+    catch(e){rej(e);}
+    finally{document.body.removeChild(ta);}
+  });
+}
+function flashCopied(btn){
+  btn.classList.add('copied');
+  btn.querySelector('.cc-label').textContent='Copied!';
+  clearTimeout(btn._ccTimer);
+  btn._ccTimer=setTimeout(function(){
+    btn.classList.remove('copied');
+    btn.querySelector('.cc-label').textContent='复制';
+  },1600);
+}
 
 /* ================= Toast ================= */
 var toastTimer;
