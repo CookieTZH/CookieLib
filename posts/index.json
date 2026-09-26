@@ -1,0 +1,8 @@
+{
+  "posts": [
+    { "id": "submission-guide", "file": "submission-guide.json" },
+    { "id": "nuxt-club-site", "file": "nuxt-club-site.json" },
+    { "id": "fluent-notes", "file": "fluent-notes.json" },
+    { "id": "powershell-policy", "file": "powershell-policy.json" }
+  ]
+}

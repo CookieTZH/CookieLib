@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-bg="wp" data-theme="light" data-transparency="on" data-corner="round">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="我的个人空间 · Fluent Design 桌面化设计">
+<title>我的空间</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect x='5' y='5' width='17.5' height='17.5' rx='2.5' fill='%234CC2F1'/><rect x='25.5' y='5' width='17.5' height='17.5' rx='2.5' fill='%231E9BE8'/><rect x='5' y='25.5' width='17.5' height='17.5' rx='2.5' fill='%231E9BE8'/><rect x='25.5' y='25.5' width='17.5' height='17.5' rx='2.5' fill='%230067C0'/></svg>">
+<script>
+/* 提前应用已保存的个性化设置，避免刷新时闪烁 */
+(function(){try{
+  var s=JSON.parse(localStorage.getItem('mydesk-settings')||'{}');
+  var d=document.documentElement;
+  if(s.bg)d.dataset.bg=s.bg;
+  if(s.theme)d.dataset.theme=s.theme;
+  if(s.transparency)d.dataset.transparency=s.transparency;
+  if(s.corner)d.dataset.corner=s.corner;
+  if(s.accent)d.style.setProperty('--accent',s.accent);
+}catch(e){}})();
+</script>
+<style>
+:root{
+  --accent:#0078D4;
+  --radius:8px;
+  --ease:cubic-bezier(.1,.9,.2,1);
+}
+html[data-corner="square"]{--radius:2px}
+
+html[data-theme="light"]{
+  --text-1:#1b1b1b;
+  --text-2:rgba(0,0,0,.62);
+  --text-3:rgba(0,0,0,.45);
+  --acrylic-bg:rgba(249,249,249,.66);
+  --acrylic-strong-bg:rgba(252,252,252,.9);
+  --card-border:rgba(255,255,255,.55);
+  --solid:#f2f2f2;
+  --solid-strong:#fafafa;
+  --seg-bg:rgba(0,0,0,.055);
+  --seg-active:#ffffff;
+  --hover-tint:rgba(0,0,0,.045);
+  --reveal:rgba(255,255,255,.55);
+  --chip-fallback:rgba(0,120,212,.12);
+  /* 主题色影响材质：浅色下用白色基底 + 主题色微染 */
+  --acrylic-tint:color-mix(in srgb,var(--accent) 9%,rgba(255,255,255,.78));
+  --acrylic-strong-tint:color-mix(in srgb,var(--accent) 10%,rgba(255,255,255,.93));
+  --tint-text:color-mix(in srgb,var(--accent) 42%,#1b1b1b);
+  /* 阅读页 Aero 毛玻璃（固定，不随透明开关变化） */
+  --reader-glass:color-mix(in srgb,var(--accent) 6%,rgba(255,255,255,.22));
+  --reader-border:rgba(255,255,255,.55);
+  --reader-scrim:rgba(255,255,255,.06);
+}
+html[data-theme="dark"]{
+  --text-1:#ffffff;
+  --text-2:rgba(255,255,255,.72);
+  --text-3:rgba(255,255,255,.48);
+  --acrylic-bg:rgba(36,36,36,.62);
+  --acrylic-strong-bg:rgba(30,30,30,.88);
+  --card-border:rgba(255,255,255,.09);
+  --solid:#242424;
+  --solid-strong:#2b2b2b;
+  --seg-bg:rgba(255,255,255,.07);
+  --seg-active:#3d3d3d;
+  --hover-tint:rgba(255,255,255,.06);
+  --reveal:rgba(255,255,255,.14);
+  --chip-fallback:rgba(0,120,212,.25);
+  /* 主题色影响材质：深色下用深灰基底 + 主题色微染 */
+  --acrylic-tint:color-mix(in srgb,var(--accent) 13%,rgba(30,30,30,.7));
+  --acrylic-strong-tint:color-mix(in srgb,var(--accent) 15%,rgba(28,28,28,.9));
+  --tint-text:color-mix(in srgb,var(--accent) 55%,#ffffff);
+  /* 阅读页 Aero 毛玻璃（固定，不随透明开关变化） */
+  --reader-glass:color-mix(in srgb,var(--accent) 7%,rgba(20,20,20,.26));
+  --reader-border:rgba(255,255,255,.14);
+  --reader-scrim:rgba(0,0,0,.12);
+}
+html[data-transparency="off"]{
+  --acrylic-bg:var(--solid);
+  --acrylic-strong-bg:var(--solid-strong);
+}
+html[data-transparency="off"] .acrylic,
+html[data-transparency="off"] .acrylic-strong{
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+
+/* 深浅色切换时的全局渐变过渡：切换瞬间挂上，600ms 后移除 */
+html.theme-fade,html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{
+  transition:background-color .5s var(--ease),background .5s var(--ease),color .5s var(--ease),
+    border-color .5s var(--ease),box-shadow .5s var(--ease),fill .5s var(--ease),outline-color .5s var(--ease) !important;
+}
+
+*{box-sizing:border-box}
+/* 关键修复：hidden 属性必须永远生效，否则隐形层会挡住整页点击 */
+[hidden]{display:none !important}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:"MSYaHei Local","Segoe UI Variable Text","Segoe UI",system-ui,"Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+  color:var(--text-1);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent);color:#fff}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+*{scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.5) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:rgba(128,128,128,.45);border-radius:6px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- 壁纸层 ---------- */
+.wp-wrap{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364)}
+.wp-layer{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .7s ease}
+.wp-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.18))}
+
+/* ---------- 通用材质 ---------- */
+.acrylic{
+  background:var(--acrylic-tint);
+  -webkit-backdrop-filter:blur(30px) saturate(160%);
+  backdrop-filter:blur(30px) saturate(160%);
+  border:1px solid var(--card-border);
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+}
+.acrylic-strong{
+  background:var(--acrylic-strong-tint);
+  -webkit-backdrop-filter:blur(40px) saturate(170%);
+  backdrop-filter:blur(40px) saturate(170%);
+  border:1px solid var(--card-border);
+  box-shadow:0 8px 32px rgba(0,0,0,.22);
+}
+.reveal{position:relative;overflow:hidden}
+.reveal::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  opacity:0;transition:opacity .35s;
+  background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),var(--reveal),transparent 65%);
+}
+.reveal:hover::before{opacity:1}
+
+/* ---------- 桌面布局 ---------- */
+.desktop{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;
+  height:100vh;padding:20px;
+}
+.side{display:flex;flex-direction:column;gap:14px;min-height:0}
+.side-reserved{flex:1}/* 左下角留白，为以后准备 */
+
+.card{border-radius:var(--radius)}
+
+/* 个人信息卡 */
+.profile{padding:22px 18px;text-align:center;flex:none}
+.profile-text{display:flex;flex-direction:column}
+.avatar{
+  width:78px;height:78px;margin:0 auto 12px;border-radius:50%;overflow:hidden;
+  border:2px solid rgba(255,255,255,.65);box-shadow:0 4px 14px rgba(0,0,0,.22);
+  transition:transform .25s var(--ease);
+}
+html[data-theme="dark"] .avatar{border-color:rgba(255,255,255,.25)}
+.avatar:hover{transform:scale(1.05)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-name{font-size:18px;font-weight:600;color:var(--tint-text)}
+.profile-sig{margin-top:6px;font-size:12.5px;color:var(--text-2);line-height:1.6}
+
+/* GitHub 卡片 */
+.github{display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;color:inherit;flex:none;transition:transform .2s var(--ease),box-shadow .2s var(--ease),background .2s}
+.github:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.gh-icon{width:28px;height:28px;fill:var(--text-1);flex:none}
+.gh-label{font-size:11px;letter-spacing:.4px;color:var(--text-3);text-transform:uppercase}
+.gh-user{font-size:14px;font-weight:600;margin-top:2px}
+.gh-arrow{margin-left:auto;width:8px;height:8px;border-top:2px solid var(--text-3);border-right:2px solid var(--text-3);transform:rotate(45deg);transition:transform .18s,color .18s,border-color .18s}
+.github:hover .gh-arrow{transform:translateX(3px) rotate(45deg);border-color:var(--accent)}
+
+/* 主区域 */
+.main{min-height:0;display:flex;flex-direction:column}
+
+.view{padding:2px 8px 24px 2px}
+.view:not([hidden]){display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;animation:viewIn .28s var(--ease)}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}}
+
+/* ---------- 博客文章流 ---------- */
+.post-list{display:flex;flex-direction:column;gap:14px;max-width:880px}
+.post{padding:18px 22px;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s var(--ease),background .2s}
+.post:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.post-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{
+  padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:500;
+  background:var(--chip-fallback);
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  color:var(--accent);
+}
+.post-meta time{margin-left:auto;font-size:12px;color:var(--text-3)}
+.post-title{margin:10px 0 6px;font-size:17px;font-weight:600;line-height:1.4;transition:color .2s}
+.post:hover .post-title{color:var(--tint-text)}
+.post-excerpt{
+  margin:0;font-size:13px;color:var(--text-2);line-height:1.65;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.post-more{margin-top:10px;font-size:12.5px;color:var(--accent);font-weight:500}
+.post-loading,.post-empty{
+  padding:40px 20px;text-align:center;color:var(--text-3);font-size:14px;line-height:1.9;
+}
+.post-loading::before{
+  content:"";display:block;width:28px;height:28px;margin:0 auto 14px;
+  border:3px solid rgba(128,128,128,.25);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.post-empty code{background:rgba(128,128,128,.18);padding:1px 6px;border-radius:4px}
+
+/* ---------- 文章阅读页（沉浸式） ---------- */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.16);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:70;opacity:0;transition:opacity .25s}
+.overlay.show{opacity:1}
+.reader-layer{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;pointer-events:none}
+.reader-layer.show .reader{transform:translateY(0);opacity:1}
+.reader-layer.show .reader-close{opacity:1}
+.reader{
+  pointer-events:auto;flex:1;min-height:0;
+  margin:16px 16px 0;border-radius:var(--radius);
+  overflow:hidden;display:flex;flex-direction:column;
+  transform:translateY(24px);opacity:0;
+  transition:transform .3s var(--ease),opacity .25s;
+  box-shadow:0 12px 48px rgba(0,0,0,.3);
+  /* Aero 毛玻璃：无论透明开关与否，阅读页背景都强制模糊玻璃 */
+  background:var(--reader-glass);
+  -webkit-backdrop-filter:blur(60px) saturate(185%);
+  backdrop-filter:blur(60px) saturate(185%);
+  border:1px solid var(--reader-border);
+}
+.reader-body{flex:1;min-height:0;overflow-y:auto;padding:0;background:var(--reader-scrim)}
+.reader-inner{max-width:760px;margin:0 auto;padding:46px 36px 72px}
+.reader-title{
+  font-size:30px;font-weight:650;line-height:1.3;margin:0 0 16px;color:var(--text-1);
+  letter-spacing:-.3px;
+}
+.reader-credits{
+  display:flex;align-items:center;gap:14px;padding-bottom:20px;margin-bottom:26px;
+  border-bottom:1px solid var(--card-border);
+}
+.reader-avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.65);box-shadow:0 2px 8px rgba(0,0,0,.22);flex:none}
+html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
+.reader-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.reader-by{display:flex;flex-direction:column;gap:2px;min-width:0}
+.reader-name{font-size:14px;font-weight:600;color:var(--text-1)}
+.reader-home{font-size:12px;color:var(--text-3)}
+.reader-credits .reader-time{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
+.reader-time .date{font-size:12px;color:var(--text-3)}
+.reader-time .chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.reader-content{font-size:15.5px;line-height:1.95;color:var(--text-1)}
+.reader-content p{margin:14px 0}
+.reader-content h1,.reader-content h2,.reader-content h3{color:var(--text-1);line-height:1.4;margin:28px 0 12px}
+.reader-content h2{font-size:20px;font-weight:650}
+.reader-content h3{font-size:17px;font-weight:600}
+.reader-content ul,.reader-content ol{margin:14px 0;padding-left:26px}
+.reader-content li{margin:6px 0}
+.reader-content blockquote{
+  margin:18px 0;padding:2px 0 2px 18px;
+  border-left:3px solid var(--accent);color:var(--text-2);
+}
+.reader-content a{color:var(--accent);text-decoration:none}
+.reader-content a:hover{text-decoration:underline}
+.reader-content pre{background:#1e1e1e;color:#e8e8e8;padding:14px 16px;border-radius:8px;font-size:13px;overflow:auto;font-family:Consolas,"Cascadia Code",monospace;margin:16px 0}
+.reader-content code{font-family:Consolas,"Cascadia Code",monospace;font-size:.9em;background:rgba(128,128,128,.18);padding:1px 6px;border-radius:4px}
+.reader-content pre code{background:none;padding:0}
+.reader-content strong{font-weight:600}
+.reader-content img{max-width:100%;border-radius:8px;margin:16px 0}
+.reader-close{
+  pointer-events:auto;position:absolute;top:28px;right:32px;z-index:1;
+  width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
+  display:grid;place-items:center;font-size:16px;
+  color:var(--text-1);
+  background:var(--acrylic-tint);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--card-border);box-shadow:0 4px 14px rgba(0,0,0,.2);
+  opacity:0;transition:opacity .25s,transform .18s var(--ease),background .2s;
+}
+.reader-close:hover{background:var(--hover-tint);transform:scale(1.08)}
+
+/* ---------- 404 页面（与阅读页同款 Aero 玻璃） ---------- */
+.nf-body{flex:1;min-height:0;overflow:auto;display:flex;gap:24px;padding:52px 56px 44px}
+.nf-left{display:flex;flex-direction:column;flex:1;min-width:0}
+.nf-code{font-size:110px;font-weight:700;line-height:.95;letter-spacing:-4px;color:var(--tint-text)}
+.nf-title{font-size:24px;font-weight:650;margin:22px 0 10px;color:var(--text-1)}
+.nf-desc{font-size:14px;line-height:1.85;color:var(--text-2);max-width:360px}
+.nf-home{
+  margin-top:auto;align-self:flex-start;
+  padding:12px 28px;border:none;border-radius:var(--radius);cursor:pointer;
+  font-family:inherit;font-size:13.5px;font-weight:600;color:#fff;
+  background:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.22);
+  transition:transform .18s var(--ease),box-shadow .18s var(--ease),filter .18s;
+}
+.nf-home:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.28);filter:brightness(1.06)}
+.nf-home:active{transform:scale(.96)}
+.nf-right{display:flex;align-items:flex-end;flex:none}
+.nf-right img{
+  height:min(60vh,430px);max-width:40vw;object-fit:contain;display:block;
+  filter:drop-shadow(0 12px 26px rgba(0,0,0,.28));
+}
+
+/* ---------- 右下角 Windows 徽标（Win11 任务栏样式） ---------- */
+/* 平时：只有徽标，无底板；悬停：浅色底板浮现；按下/打开：底板更实、带描边 */
+.start{
+  position:fixed;right:18px;bottom:18px;z-index:65;
+  width:44px;height:44px;border-radius:7px;
+  border:1px solid transparent;background:transparent;
+  display:grid;place-items:center;cursor:pointer;
+  transition:transform .15s var(--ease),background .2s,border-color .2s,box-shadow .2s;
+}
+.start:hover{
+  background:rgba(255,255,255,.55);border-color:rgba(255,255,255,.75);
+  box-shadow:0 2px 10px rgba(0,0,0,.12);
+}
+.start:active{transform:scale(.9)}
+.start.open,.start:active{
+  background:rgba(246,246,246,.88);border-color:rgba(0,0,0,.08);
+  box-shadow:0 2px 8px rgba(0,0,0,.16);
+}
+html[data-theme="dark"] .start:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.14);box-shadow:none}
+html[data-theme="dark"] .start.open,
+html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.22)}
+.start svg{width:24px;height:24px;display:block}
+
+/* ---------- 个性化设置面板 ---------- */
+.flyout{
+  position:fixed;right:16px;bottom:76px;z-index:60;
+  width:380px;max-width:calc(100vw - 24px);border-radius:var(--radius);padding:18px;
+  opacity:0;transform:translateY(14px) scale(.98);
+  transition:opacity .2s var(--ease),transform .2s var(--ease);
+}
+.flyout.show{opacity:1;transform:none}
+.flyout-head{font-size:15px;font-weight:600;margin-bottom:14px}
+.group{margin-bottom:14px}
+.group-title{font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:8px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.row .group-title{margin-bottom:0}
+
+.bg-picker{display:flex;gap:12px}
+.bg-thumb{background:none;border:none;cursor:pointer;padding:0}
+.thumb{
+  width:158px;height:88px;border-radius:6px;background-size:cover;background-position:center;
+  border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);transition:border-color .2s,box-shadow .2s;
+  display:block;
+}
+.bg-thumb.active .thumb{border-color:var(--accent)}
+
+/* 默认圆角按钮（Win11 标准按钮样式） */
+.theme-btns{display:flex;gap:8px}
+.theme-btns button{
+  flex:1;padding:7px 0;border-radius:var(--radius);
+  border:1px solid var(--card-border);background:var(--seg-bg);
+  color:var(--text-2);cursor:pointer;font-size:13px;font-family:inherit;
+  transition:background .2s,color .2s,border-color .2s,box-shadow .2s;
+}
+.theme-btns button:hover{background:var(--hover-tint);color:var(--text-1)}
+.theme-btns button:active{transform:scale(.97)}
+.theme-btns button.active{
+  background:var(--accent);border-color:transparent;color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+}
+
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:outline-color .15s}
+.swatch.active{outline-color:var(--text-3)}
+.swatch.active::after{content:"✓";color:#fff;font-size:13px;display:block;text-align:center;line-height:28px}
+
+.switch{position:relative;display:inline-block;width:40px;height:20px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;border-radius:99px;background:rgba(128,128,128,.4);transition:.2s;cursor:pointer}
+.slider::before{
+  content:"";position:absolute;left:4px;top:4px;width:12px;height:12px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s var(--ease);
+}
+.switch input:checked + .slider{background:var(--accent)}
+.switch input:checked + .slider::before{transform:translateX(20px)}
+
+.flyout-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:12px;border-top:1px solid var(--card-border)}
+.link-btn{border:none;background:none;color:var(--accent);font-size:12.5px;cursor:pointer;padding:4px 6px;border-radius:4px;font-family:inherit}
+.link-btn:hover{background:var(--hover-tint)}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:28px;z-index:90;
+  transform:translateX(-50%) translateY(8px);
+  padding:10px 18px;border-radius:var(--radius);font-size:13px;
+  opacity:0;transition:.25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:920px){
+  body{overflow:auto}
+  .desktop{grid-template-columns:1fr;height:auto;min-height:100vh;padding:14px 14px 90px}
+  .side{flex-direction:row;flex-wrap:wrap;align-items:stretch}
+  .profile{flex:1 1 100%;display:flex;align-items:center;text-align:left;gap:14px}
+  .avatar{width:56px;height:56px;margin:0}
+  .profile-name{font-size:16px}
+  .github{flex:1 1 auto}
+  .side-reserved{display:none}
+  .flyout{left:12px;right:12px;width:auto;bottom:78px}
+  .reader{margin:0;border-radius:0}
+  .reader-close{top:14px;right:16px}
+  .reader-inner{padding:36px 22px 60px}
+  .reader-title{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<!-- 壁纸 -->
+<div class="wp-wrap" aria-hidden="true">
+  <div class="wp-layer" id="wpA"></div>
+  <div class="wp-layer" id="wpB"></div>
+  <div class="wp-vignette"></div>
+</div>
+
+<div class="desktop">
+  <!-- 左侧栏 -->
+  <aside class="side">
+    <section class="card acrylic profile">
+      <div class="avatar"><img data-asset="images/avatar/avatar.jpg" alt="头像"></div>
+      <div class="profile-text">
+        <div class="profile-name">海棠花下</div>
+        <div class="profile-sig">喜欢折腾代码的学生 · 信息技术拓展社团</div>
+      </div>
+    </section>
+
+    <a class="card acrylic reveal github" href="https://github.com/CookieTZH" target="_blank" rel="noopener">
+      <svg class="gh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      <span class="gh-text">
+        <span class="gh-label">GitHub</span>
+        <span class="gh-user" style="display:block">@CookieTZH</span>
+      </span>
+      <span class="gh-arrow" aria-hidden="true"></span>
+    </a>
+
+    <!-- 左下角：预留区域 -->
+    <div class="side-reserved" aria-hidden="true"></div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main">
+    <section id="view-blog" class="view">
+      <div id="postList" class="post-list"></div>
+    </section>
+  </main>
+</div>
+
+<!-- 文章阅读页 -->
+<div class="overlay" id="overlay" hidden></div>
+<div class="reader-layer" id="readerLayer" hidden role="dialog" aria-modal="true" aria-labelledby="readerTitle">
+  <button class="reader-close" id="readerClose" title="关闭" aria-label="关闭阅读页">✕</button>
+  <div class="reader">
+    <div class="reader-body" id="readerBody"></div>
+  </div>
+</div>
+
+<!-- 404 页面（与阅读页同款 Aero 玻璃，左侧文字 + 右侧角色，左下角返回首页） -->
+<div class="reader-layer" id="nfLayer" hidden role="dialog" aria-modal="true" aria-label="404 页面未找到">
+  <button class="reader-close" id="nfClose" title="关闭" aria-label="关闭 404 页面">✕</button>
+  <div class="reader nf-reader">
+    <div class="nf-body">
+      <div class="nf-left">
+        <div class="nf-code">404</div>
+        <div class="nf-title">页面走丢了</div>
+        <div class="nf-desc">你访问的板块不存在，或者已经被移动到了别的地方。此方找了一圈，也没有发现它。</div>
+        <button class="nf-home" id="nfHome">返回首页</button>
+      </div>
+      <div class="nf-right">
+        <img data-asset="images/404/ciallo.png" alt="Ciallo 角色">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 个性化设置面板 -->
+<div class="flyout acrylic-strong" id="flyout" hidden>
+  <div class="flyout-head">个性化</div>
+
+  <div class="group">
+    <div class="group-title">背景图片</div>
+    <div class="bg-picker" id="bgPicker">
+      <button class="bg-thumb" data-bg="dark">
+        <span class="thumb" data-asset="images/background/dark.jpg"></span>
+      </button>
+      <button class="bg-thumb" data-bg="wp">
+        <span class="thumb" data-asset="images/background/wp.jpg"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">颜色模式</div>
+    <div class="theme-btns" id="themeSeg">
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">主题色</div>
+    <div class="swatches" id="swatches"></div>
+  </div>
+
+  <div class="group row">
+    <div>
+      <div class="group-title">透明效果</div>
+    </div>
+    <label class="switch"><input type="checkbox" id="transparencyToggle" checked><span class="slider"></span></label>
+  </div>
+
+  <div class="group row">
+    <div>
+      <div class="group-title">圆角样式</div>
+    </div>
+    <label class="switch"><input type="checkbox" id="cornerToggle" checked><span class="slider"></span></label>
+  </div>
+
+  <div class="flyout-foot">
+    <button class="link-btn" id="resetBtn">恢复默认</button>
+  </div>
+</div>
+
+<!-- 右下角 Windows 徽标 -->
+<button class="start" id="startBtn" title="个性化设置" aria-label="打开个性化设置" aria-expanded="false">
+  <svg viewBox="0 0 48 48" aria-hidden="true">
+    <defs>
+      <linearGradient id="winLogoGrad" gradientUnits="userSpaceOnUse" x1="6" y1="6" x2="42" y2="42">
+        <stop offset="0" stop-color="#4CC2F1"/>
+        <stop offset=".5" stop-color="#1E9BE8"/>
+        <stop offset="1" stop-color="#0067C0"/>
+      </linearGradient>
+    </defs>
+    <rect x="5" y="5" width="17.5" height="17.5" rx="2.5" fill="url(#winLogoGrad)"/>
+    <rect x="25.5" y="5" width="17.5" height="17.5" rx="2.5" fill="url(#winLogoGrad)"/>
+    <rect x="5" y="25.5" width="17.5" height="17.5" rx="2.5" fill="url(#winLogoGrad)"/>
+    <rect x="25.5" y="25.5" width="17.5" height="17.5" rx="2.5" fill="url(#winLogoGrad)"/>
+  </svg>
+</button>
+
+<div class="toast acrylic-strong" id="toast" hidden></div>
+
+<script>
+/* ================= 数据 ================= */
+/* 方案 B：文章清单在 posts/index.json，逐篇文件在 posts/<id>.json。
+ * 启动时 fetch 清单，逐篇加载正文，再渲染列表。加文章 = 新增一个 json 文件 + 在 index.json 登记一条。 */
+var posts = [];
+
+/* ================= 站点根路径 =================
+ * 站点可部署在任意子路径（GitHub Pages 的 /repo/），也会被 SPA 回退
+ * 服务在深层路径上（如 /images/sb）。这里推断站点根目录：
+ * 常规路径（/ 或 /index.html 结尾）同步可得；深层路径启动后逐级向上探测。
+ */
+var BASE=(function(){
+  var p=location.pathname;
+  if(/\/index\.html$/i.test(p))return p.slice(0,-10); /* 去掉 index.html（10 字符） */
+  if(/\/$/.test(p))return p;
+  return null; /* 深层路径，待探测 */
+})();
+function assetUrl(rel){return BASE+rel;}
+function ensureBase(){
+  if(BASE)return Promise.resolve(BASE);
+  var p;try{p=decodeURIComponent(location.pathname)}catch(e){p=location.pathname}
+  var segs=p.split('/').filter(Boolean);
+  var seen={},cands=[];
+  for(var i=segs.length;i>=1;i--){
+    var c='/'+segs.slice(0,i).join('/')+'/';
+    if(!seen[c]){seen[c]=1;cands.push(c);}
+  }
+  if(!seen['/'])cands.push('/');
+  /* 逐个候选根尝试拉取文章清单，能返回合法 JSON 的即为站点根 */
+  return cands.reduce(function(pr,c){
+    return pr.catch(function(){
+      return fetch(c+'posts/index.json').then(function(r){
+        if(!r.ok)throw 0;
+        return r.json();
+      }).then(function(j){
+        if(!j||!j.posts)throw 0;
+        return c;
+      });
+    });
+  },Promise.reject()).then(function(c){BASE=c;return c;})
+  .catch(function(){BASE=p.replace(/[^/]*$/,'')||'/';return BASE;});
+}
+function fixAssets(){
+  document.querySelectorAll('[data-asset]').forEach(function(n){
+    var rel=n.getAttribute('data-asset');
+    if(n.tagName==='IMG')n.src=assetUrl(rel);
+    else n.style.backgroundImage='url("'+assetUrl(rel)+'")';
+  });
+}
+/* 注入本地字体 @font-face（路径走 BASE，保证深层路径下也能正确加载） */
+function injectFonts(){
+  var css='@font-face{font-family:"MSYaHei Local";src:url("'+assetUrl('fonts/msyh-regular.woff2')+'") format("woff2");font-weight:400 500;font-display:swap;}\n'
+    +'@font-face{font-family:"MSYaHei Local";src:url("'+assetUrl('fonts/msyh-bold.woff2')+'") format("woff2");font-weight:600 650 700;font-display:swap;}';
+  var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+}
+
+var ACCENTS=['#0078D4','#8764B8','#00B7C3','#107C10','#C42B1C','#CA5010','#E3008C'];
+var DEFAULTS={bg:'wp',theme:'light',accent:'#0078D4',transparency:'on',corner:'round'};
+
+/* ================= 设置 ================= */
+var settings=(function(){
+  try{return Object.assign({},DEFAULTS,JSON.parse(localStorage.getItem('mydesk-settings')||'{}'))}
+  catch(e){return Object.assign({},DEFAULTS)}
+})();
+
+var el=function(id){return document.getElementById(id)};
+var wpLayers=[el('wpA'),el('wpB')],wpActive=0,lastBg=null;
+
+function setWallpaper(bg,instant){
+  if(bg===lastBg)return;
+  var next=wpLayers[1-wpActive],cur=wpLayers[wpActive];
+  next.style.backgroundImage='url("'+assetUrl('images/background/'+bg+'.jpg')+'")';
+  if(instant){
+    next.style.transition='none';next.style.opacity='1';void next.offsetWidth;next.style.transition='';
+    cur.style.transition='none';cur.style.opacity='0';void cur.offsetWidth;cur.style.transition='';
+  }else{
+    next.style.opacity='1';cur.style.opacity='0';
+  }
+  wpActive=1-wpActive;lastBg=bg;
+}
+
+function applySettings(instant){
+  var d=document.documentElement;
+  d.dataset.bg=settings.bg;
+  d.dataset.theme=settings.theme;
+  d.dataset.transparency=settings.transparency;
+  d.dataset.corner=settings.corner;
+  d.style.setProperty('--accent',settings.accent);
+  setWallpaper(settings.bg,instant);
+
+  document.querySelectorAll('.bg-thumb').forEach(function(b){b.classList.toggle('active',b.dataset.bg===settings.bg)});
+  document.querySelectorAll('#themeSeg button').forEach(function(b){b.classList.toggle('active',b.dataset.themeSet===settings.theme)});
+  document.querySelectorAll('.swatch').forEach(function(s){s.classList.toggle('active',s.dataset.accent===settings.accent)});
+  el('transparencyToggle').checked=settings.transparency==='on';
+  el('cornerToggle').checked=settings.corner==='round';
+  el('startBtn').setAttribute('aria-expanded',String(!flyout.hidden));
+}
+
+function saveSettings(){localStorage.setItem('mydesk-settings',JSON.stringify(settings))}
+function setSetting(k,v){settings[k]=v;saveSettings();applySettings()}
+
+/* ================= 渲染 ================= */
+function renderPosts(){
+  el('postList').innerHTML=posts.map(function(p){
+    return '<article class="card acrylic reveal post" data-id="'+p.id+'">'
+      +'<div class="post-meta">'+p.tags.map(function(t){return '<span class="chip">'+t+'</span>'}).join('')+'<time>'+p.date+'</time></div>'
+      +'<h2 class="post-title">'+p.title+'</h2>'
+      +'<p class="post-excerpt">'+p.excerpt+'</p>'
+      +'<div class="post-more">阅读全文</div>'
+      +'</article>';
+  }).join('');
+}
+
+/* ================= 文章阅读页 ================= */
+var overlay=el('overlay'),readerLayer=el('readerLayer'),readerBody=el('readerBody');
+var nfLayer=el('nfLayer');
+function openArticle(p){
+  /* 独占显示：先瞬时关掉 404 层 */
+  nfLayer.hidden=true;nfLayer.classList.remove('show');
+  var chips=p.tags.map(function(t){return '<span class="chip">'+t+'</span>'}).join('');
+  readerBody.innerHTML='<div class="reader-inner">'
+    +'<h1 class="reader-title" id="readerTitle">'+p.title+'</h1>'
+    +'<div class="reader-credits">'
+      +'<div class="reader-avatar"><img src="'+assetUrl('images/avatar/avatar.jpg')+'" alt="头像"></div>'
+      +'<div class="reader-by">'
+        +'<span class="reader-name">海棠花下</span>'
+        +'<span class="reader-home">SmartTeachNanfang-Club · 信息技术拓展社团</span>'
+      +'</div>'
+      +'<div class="reader-time">'
+        +'<span class="date">'+p.date+'</span>'
+        +'<span class="chips">'+chips+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="reader-content">'+p.content+'</div>'
+  +'</div>';
+  readerLayer.hidden=false;overlay.hidden=false;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    readerLayer.classList.add('show');overlay.classList.add('show');
+  })});
+  el('readerClose').focus();
+}
+function closeArticle(){
+  if(readerLayer.hidden)return;
+  readerLayer.classList.remove('show');overlay.classList.remove('show');
+  setTimeout(function(){
+    readerLayer.hidden=true;overlay.hidden=nfLayer.hidden;
+    readerBody.scrollTop=0;
+  },280);
+}
+el('readerClose').addEventListener('click',goHome);
+overlay.addEventListener('click',goHome);
+
+/* ================= Toast ================= */
+var toastTimer;
+function toast(msg){
+  var t=el('toast');t.textContent=msg;t.hidden=false;
+  requestAnimationFrame(function(){t.classList.add('show')});
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.hidden=true},260)},2400);
+}
+
+/* ================= 设置面板 ================= */
+var flyout=el('flyout'),startBtn=el('startBtn');
+function openFlyout(){
+  flyout.hidden=false;
+  requestAnimationFrame(function(){flyout.classList.add('show')});
+  startBtn.classList.add('open');startBtn.setAttribute('aria-expanded','true');
+}
+function closeFlyout(){
+  flyout.classList.remove('show');
+  startBtn.classList.remove('open');startBtn.setAttribute('aria-expanded','false');
+  setTimeout(function(){flyout.hidden=true},200);
+}
+startBtn.addEventListener('click',function(e){e.stopPropagation();flyout.hidden?openFlyout():closeFlyout()});
+document.addEventListener('pointerdown',function(e){
+  if(!flyout.hidden&&!flyout.contains(e.target)&&!startBtn.contains(e.target))closeFlyout();
+});
+
+el('bgPicker').addEventListener('click',function(e){
+  var b=e.target.closest('.bg-thumb');if(b)setSetting('bg',b.dataset.bg);
+});
+/* 深浅色切换渐变：挂上全局过渡类，600ms 后移除 */
+var themeFadeTimer;
+function playThemeFade(){
+  var d=document.documentElement;
+  d.classList.remove('theme-fade');void d.offsetWidth;
+  d.classList.add('theme-fade');
+  clearTimeout(themeFadeTimer);
+  themeFadeTimer=setTimeout(function(){d.classList.remove('theme-fade')},600);
+}
+el('themeSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.themeSet&&b.dataset.themeSet!==settings.theme)playThemeFade();
+  setSetting('theme',b.dataset.themeSet);
+});
+el('transparencyToggle').addEventListener('change',function(){setSetting('transparency',this.checked?'on':'off')});
+el('cornerToggle').addEventListener('change',function(){setSetting('corner',this.checked?'round':'square')});
+el('resetBtn').addEventListener('click',function(){
+  playThemeFade();
+  settings=Object.assign({},DEFAULTS);saveSettings();applySettings();toast('已恢复默认设置');
+});
+
+/* 主题色 swatch 生成 */
+el('swatches').innerHTML=ACCENTS.map(function(c){
+  return '<button class="swatch" data-accent="'+c+'" style="background:'+c+'" aria-label="主题色 '+c+'"></button>';
+}).join('');
+el('swatches').addEventListener('click',function(e){
+  var s=e.target.closest('.swatch');if(s)setSetting('accent',s.dataset.accent);
+});
+
+/* ================= 404 页面 ================= */
+function open404(){
+  /* 独占显示：先瞬时关掉阅读层 */
+  readerLayer.hidden=true;readerLayer.classList.remove('show');
+  if(!nfLayer.hidden)return;
+  nfLayer.hidden=false;overlay.hidden=false;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    nfLayer.classList.add('show');overlay.classList.add('show');
+  })});
+}
+function close404(){
+  if(nfLayer.hidden)return;
+  nfLayer.classList.remove('show');
+  setTimeout(function(){
+    nfLayer.hidden=true;overlay.hidden=readerLayer.hidden;
+  },280);
+}
+el('nfClose').addEventListener('click',goHome);
+el('nfHome').addEventListener('click',goHome);
+
+/* ================= 路由 =================
+ * 路径级：只有站点根是有效地址，其余路径（如 /images/sb）一律 404；
+ * 哈希级：#/ 首页 | #/post/<id> 文章 | 其他任何值 404。
+ */
+function isRootPath(){
+  var p=location.pathname.replace(/\/index\.html$/i,'');
+  if(!/\/$/.test(p))p+='/';
+  return p===BASE;
+}
+function goHome(){
+  /* 从深层路径的 404 返回时，必须整页跳回站点根，仅改哈希无法离开 */
+  if(!isRootPath()){location.href=BASE;return;}
+  location.hash='#/';
+}
+function handleRoute(){
+  if(!isRootPath()){closeArticle();open404();return;}
+  var hash=location.hash||'#/';
+  var mPost=hash.match(/^#\/post\/(.+)$/);
+  if(hash!=='#/'&&hash!=='#'&&hash!==''&&!mPost){
+    closeArticle();open404();return;
+  }
+  close404();
+  if(!mPost){closeArticle();return;}
+  var id=decodeURIComponent(mPost[1]);
+  postsReady.then(function(){
+    /* 等待期间路由可能又变了，校验一次 */
+    var cur=location.hash.match(/^#\/post\/(.+)$/);
+    if(!cur||decodeURIComponent(cur[1])!==id)return;
+    var p=null;
+    for(var i=0;i<posts.length;i++){if(posts[i].id===id){p=posts[i];break;}}
+    if(p){openArticle(p);}else{closeArticle();open404();}
+  });
+}
+
+/* ================= 事件委托 ================= */
+document.addEventListener('click',function(e){
+  var post=e.target.closest('.post');
+  if(post)location.hash='#/post/'+encodeURIComponent(post.dataset.id);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(!readerLayer.hidden)goHome();
+    else if(!nfLayer.hidden)goHome();
+    else if(!flyout.hidden)closeFlyout();
+  }
+});
+
+/* Reveal 高亮跟随鼠标 */
+document.addEventListener('pointermove',function(e){
+  var t=e.target;
+  var elx=t&&t.closest?t.closest('.reveal'):null;
+  if(!elx)return;
+  var r=elx.getBoundingClientRect();
+  elx.style.setProperty('--mx',(e.clientX-r.left)+'px');
+  elx.style.setProperty('--my',(e.clientY-r.top)+'px');
+});
+
+/* ================= 初始化 ================= */
+/* 先占位加载态，探测到站点根后：修正资源路径、应用设置、加载文章、路由 */
+el('postList').innerHTML='<div class="post-loading">正在加载…</div>';
+var postsReady=null;
+ensureBase().then(function(){
+  fixAssets();
+  injectFonts();
+  applySettings(true);
+  postsReady=loadPosts();
+  handleRoute();
+  window.addEventListener('hashchange',handleRoute);
+});
+
+/* ================= 文章加载（方案 B：fetch 清单 + 逐篇正文） ================= */
+function loadPosts(){
+  var list=el('postList');
+  list.innerHTML='<div class="post-loading">正在加载文章…</div>';
+  return fetch(assetUrl('posts/index.json'))
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(manifest){
+      /* 顺序以 index.json 为准（想调文章顺序，改清单即可） */
+      var items = (manifest.posts || []);
+      if(!items.length){ list.innerHTML='<div class="post-empty">还没有文章，去 posts/ 目录添加吧。</div>'; return; }
+      /* 逐篇拉取正文 */
+      var seq = Promise.resolve();
+      var loaded = [];
+      items.forEach(function(meta){
+        seq = seq.then(function(){
+          return fetch(assetUrl('posts/'+meta.file))
+            .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+            .then(function(p){
+              p.id = p.id || meta.id;
+              loaded.push(p);
+            })
+            .catch(function(e){
+              console.warn('加载文章失败：'+meta.file, e);
+              loaded.push({ id:meta.id, title:meta.file, date:'', tags:['加载失败'],
+                excerpt:'这篇文章没能加载出来（'+e.message+'）。', content:'' });
+            });
+        });
+      });
+      return seq.then(function(){
+        posts = loaded;
+        renderPosts();
+      });
+    })
+    .catch(function(e){
+      /* 文章加载失败（部署损坏 / 服务异常等）：展示 404 页面而不是行内报错 */
+      console.error('文章加载失败，已展示 404 页面', e);
+      posts = [];
+      open404();
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "id": "powershell-policy",
+  "title": "PowerShell 执行策略报错？一条命令解决",
+  "date": "2026-09-05",
+  "tags": ["Windows", "终端"],
+  "excerpt": "“在此系统上禁止运行脚本”不是病毒，也不是安装坏了——大概率只是执行策略在拦你。",
+  "content": "<p>在 Windows 上第一次跑 <code>npm run dev</code>，终端里劈头盖脸一行红字：<strong>“在此系统上禁止运行脚本。”</strong>很多人第一反应是 Node.js 坏了，其实跟它毫无关系——拦你的是 PowerShell 的<strong>执行策略（Execution Policy）</strong>。</p><p>查看当前策略：</p><pre>Get-ExecutionPolicy -List</pre><p>把当前用户的策略改成 <code>RemoteSigned</code> 即可：本地脚本随便跑，网上下载的脚本需要签名。</p><pre>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</pre><p>如果只是临时执行一次，可以用 <code>powershell -ExecutionPolicy Bypass -File xxx.ps1</code>，不改动任何全局配置。不建议用 <code>Unrestricted</code>，等于把防护整个关掉。</p>"
+}
