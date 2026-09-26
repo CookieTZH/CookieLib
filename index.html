@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="我的个人空间 · Fluent Design 桌面化设计">
-<title>我的空间</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect x='5' y='5' width='17.5' height='17.5' rx='2.5' fill='%234CC2F1'/><rect x='25.5' y='5' width='17.5' height='17.5' rx='2.5' fill='%231E9BE8'/><rect x='5' y='25.5' width='17.5' height='17.5' rx='2.5' fill='%231E9BE8'/><rect x='25.5' y='25.5' width='17.5' height='17.5' rx='2.5' fill='%230067C0'/></svg>">
+<title>Cookiesの海棠乡</title>
+<link rel="icon" type="image/jpeg" href="pictures/avatar/avatar.jpg">
 <script>
 /* 提前应用已保存的个性化设置，避免刷新时闪烁 */
 (function(){try{
@@ -319,6 +319,26 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
     background:linear-gradient(90deg,rgba(30,30,30,0) 0%,#1e1e1e 72%);
   }
   .code-copy:active{transform:scale(.95)}
+}
+
+/* 螺旋测微计式滚动指示：代码块可滚动时，右侧一根细条上有个高亮弧段
+ * 随滚动方向上下移动，像测微计旋钮的反光在「转」，无刻度，两端渐暗 */
+.code-block{position:relative}
+.code-block.has-scroll::before{
+  content:"";position:absolute;top:10px;right:2px;bottom:10px;width:4px;
+  pointer-events:none;border-radius:3px;
+  background:rgba(255,255,255,.14);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%);
+}
+.code-block.has-scroll::after{
+  content:"";position:absolute;right:2px;width:4px;height:26px;border-radius:3px;
+  pointer-events:none;background:rgba(255,255,255,.55);
+  top:calc(10px + var(--code-scroll-pct,0%) * (100% - 20px - 26px));
+  transition:top .1s linear;
+}
+@media (hover:none){
+  .code-block.has-scroll::before,.code-block.has-scroll::after{width:3px}
 }
 .reader-content strong{font-weight:600}
 .reader-content img{max-width:100%;border-radius:8px;margin:16px 0}
@@ -793,6 +813,21 @@ function enhanceCodeBlocks(root){
       var code=pre.querySelector('code')||pre;
       copyText(code.innerText).then(function(){flashCopied(btn)},function(){flashCopied(btn)});
     });
+
+    /* 螺旋测微计滚动指示：仅当代码超高可滚动时显示，高亮弧段随滚动进度上下「转」 */
+    function updateScrollIndicator(){
+      var max=pre.scrollHeight-pre.clientHeight;
+      if(max>2){
+        wrap.classList.add('has-scroll');
+        /* 把滚动量映射成 0~1 进度，驱动右侧高亮弧段在轨道上移动 */
+        wrap.style.setProperty('--code-scroll-pct',(max>0?pre.scrollTop/max:0));
+      }else{
+        wrap.classList.remove('has-scroll');
+      }
+    }
+    updateScrollIndicator();
+    pre.addEventListener('scroll',updateScrollIndicator,{passive:true});
+    window.addEventListener('resize',updateScrollIndicator,{passive:true});
   });
 }
 function copyText(text){
