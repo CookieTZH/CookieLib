@@ -1,8 +1,0 @@
-{
-  "id": "fluent-notes",
-  "title": "Fluent Design 设计笔记：亚克力、揭示动效与深度",
-  "date": "2026-09-12",
-  "tags": ["设计", "Fluent"],
-  "excerpt": "亚克力材质怎么调才通透？Reveal 高亮如何跟随鼠标？聊聊把 Windows 11 质感搬进网页的几个关键细节。",
-  "content": "<p>Fluent Design 的核心是五种元素：Light、Depth、Motion、Material、Scale。落到网页上，最出效果的是<strong>材质</strong>和<strong>层次</strong>。</p><p>亚克力（Acrylic）的配方很简单：半透明底色 + <code>backdrop-filter: blur(30px) saturate(160%)</code>。饱和度一定要拉，否则毛玻璃会显得“脏”。边缘再压一圈 1px 的半透明描边，质感立刻就出来了。</p><p>Reveal 高亮是点睛之笔：监听鼠标位置，在卡片上叠一层跟随光标的径向渐变。动效方面，Windows 11 偏好快速而克制的曲线——<code>cubic-bezier(.1,.9,.2,1)</code> 配合 200ms 左右的时长，就有那股“利落”的味道。</p><p>最后是圆角与阴影：8px 圆角、大而柔的多层阴影，配合壁纸做出深度，整个界面就“浮”起来了。</p>"
-}

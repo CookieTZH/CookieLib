@@ -24,7 +24,7 @@ ASCII = "".join(chr(c) for c in range(0x20, 0x7F))
 def collect_chars():
     chars = set(ASCII)
     # 扫描 HTML 与文章 JSON 的全部文本
-    files = glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "posts", "*.json"))
+    files = glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "articles", "*.json"))
     for fp in files:
         try:
             text = open(fp, encoding="utf-8").read()
