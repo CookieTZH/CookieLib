@@ -23,7 +23,18 @@
 :root{
   --accent:#0078D4;
   --radius:8px;
-  --ease:cubic-bezier(.1,.9,.2,1);
+  /* WinUI 3 官方 Fluent 缓动曲线（Timing and easing 规范）：
+   * Fast Out, Slow In   —— 对象进入场景（导航/生成），末尾强摩擦减速
+   * Slow Out, Fast In   —— 对象退出场景，加速直至脱离
+   * 点对点移动           —— 现有元素在页面内移动 */
+  --ease:cubic-bezier(0,0,0,1);           /* Fast Out, Slow In */
+  --ease-out:cubic-bezier(0,0,0,1);       /* 进入 */
+  --ease-in:cubic-bezier(1,0,1,1);        /* 退出（Slow Out, Fast In） */
+  --ease-ptp:cubic-bezier(0.55,0.55,0,1); /* 点对点移动 */
+  /* 标准时长：正常 250ms / 快速 167ms / 更快 83ms */
+  --dur-normal:250ms;
+  --dur-fast:167ms;
+  --dur-faster:83ms;
 }
 html[data-corner="square"]{--radius:2px}
 
@@ -46,9 +57,10 @@ html[data-theme="light"]{
   --acrylic-strong-tint:color-mix(in srgb,var(--accent) 10%,rgba(255,255,255,.93));
   --tint-text:color-mix(in srgb,var(--accent) 42%,#1b1b1b);
   /* 阅读页 Aero 毛玻璃（固定，不随透明开关变化） */
-  --reader-glass:color-mix(in srgb,var(--accent) 6%,rgba(255,255,255,.22));
+  --reader-glass:color-mix(in srgb,var(--accent) 6%,rgba(255,255,255,.24));
   --reader-border:rgba(255,255,255,.55);
-  --reader-scrim:rgba(255,255,255,.06);
+  /* 玻璃很透时，用一层 opacity 衬底保证文字可读性 */
+  --reader-scrim:rgba(255,255,255,.28);
 }
 html[data-theme="dark"]{
   --text-1:#ffffff;
@@ -69,9 +81,10 @@ html[data-theme="dark"]{
   --acrylic-strong-tint:color-mix(in srgb,var(--accent) 15%,rgba(28,28,28,.9));
   --tint-text:color-mix(in srgb,var(--accent) 55%,#ffffff);
   /* 阅读页 Aero 毛玻璃（固定，不随透明开关变化） */
-  --reader-glass:color-mix(in srgb,var(--accent) 7%,rgba(20,20,20,.26));
+  --reader-glass:color-mix(in srgb,var(--accent) 7%,rgba(20,20,20,.3));
   --reader-border:rgba(255,255,255,.14);
-  --reader-scrim:rgba(0,0,0,.12);
+  /* 玻璃很透时，用一层 opacity 衬底保证文字可读性 */
+  --reader-scrim:rgba(0,0,0,.32);
 }
 html[data-transparency="off"]{
   --acrylic-bg:var(--solid);
@@ -126,13 +139,21 @@ body{
   border:1px solid var(--card-border);
   box-shadow:0 8px 32px rgba(0,0,0,.22);
 }
+/* Reveal：Fluent 风格的高光跟随（点对点移动曲线 + 快速时长）。
+ * 内层光斑随指针平滑追随手感（用 translate 驱动，走合成层），
+ * 悬停时以 Fast Out, Slow In 淡入，移出时以 Slow Out, Fast In 淡出。 */
 .reveal{position:relative;overflow:hidden}
 .reveal::before{
-  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  opacity:0;transition:opacity .35s;
-  background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),var(--reveal),transparent 65%);
+  content:"";position:absolute;left:-160px;top:-160px;width:320px;height:320px;
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,var(--reveal) 0%,transparent 68%);
+  opacity:0;
+  transform:translate(var(--mx,0px),var(--my,0px));
+  transition:opacity var(--dur-normal) var(--ease-out);
+  will-change:transform,opacity;
 }
-.reveal:hover::before{opacity:1}
+.reveal:hover::before{opacity:1;transition:opacity var(--dur-faster) var(--ease-out)}
+.reveal:not(:hover)::before{transition:opacity var(--dur-normal) var(--ease-in)}
 
 /* ---------- 桌面布局 ---------- */
 .desktop{
@@ -151,34 +172,34 @@ body{
 .avatar{
   width:78px;height:78px;margin:0 auto 12px;border-radius:50%;overflow:hidden;
   border:2px solid rgba(255,255,255,.65);box-shadow:0 4px 14px rgba(0,0,0,.22);
-  transition:transform .25s var(--ease);
+  transition:transform var(--dur-normal) var(--ease-out);
 }
 html[data-theme="dark"] .avatar{border-color:rgba(255,255,255,.25)}
-.avatar:hover{transform:scale(1.05)}
+.avatar:hover{transform:scale(1.04)}
 .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .profile-name{font-size:18px;font-weight:600;color:var(--tint-text)}
 .profile-sig{margin-top:6px;font-size:12.5px;color:var(--text-2);line-height:1.6}
 
 /* GitHub 卡片 */
-.github{display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;color:inherit;flex:none;transition:transform .2s var(--ease),box-shadow .2s var(--ease),background .2s}
-.github:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.github{display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;color:inherit;flex:none;transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out)}
+.github:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.2)}
 .gh-icon{width:28px;height:28px;fill:var(--text-1);flex:none}
 .gh-label{font-size:11px;letter-spacing:.4px;color:var(--text-3);text-transform:uppercase}
 .gh-user{font-size:14px;font-weight:600;margin-top:2px}
-.gh-arrow{margin-left:auto;width:8px;height:8px;border-top:2px solid var(--text-3);border-right:2px solid var(--text-3);transform:rotate(45deg);transition:transform .18s,color .18s,border-color .18s}
+.gh-arrow{margin-left:auto;width:8px;height:8px;border-top:2px solid var(--text-3);border-right:2px solid var(--text-3);transform:rotate(45deg);transition:transform var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out)}
 .github:hover .gh-arrow{transform:translateX(3px) rotate(45deg);border-color:var(--accent)}
 
 /* 主区域 */
 .main{min-height:0;display:flex;flex-direction:column}
 
 .view{padding:2px 8px 24px 2px}
-.view:not([hidden]){display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;animation:viewIn .28s var(--ease)}
-@keyframes viewIn{from{opacity:0;transform:translateY(10px)}}
+.view:not([hidden]){display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;animation:viewIn var(--dur-normal) var(--ease-out)}
+@keyframes viewIn{from{opacity:0;transform:translateY(12px)}}
 
 /* ---------- 博客文章流 ---------- */
 .post-list{display:flex;flex-direction:column;gap:14px;max-width:880px}
-.post{padding:18px 22px;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s var(--ease),background .2s}
-.post:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.post{padding:18px 22px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out)}
+.post:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.2)}
 .post-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .chip{
   padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:500;
@@ -187,7 +208,7 @@ html[data-theme="dark"] .avatar{border-color:rgba(255,255,255,.25)}
   color:var(--accent);
 }
 .post-meta time{margin-left:auto;font-size:12px;color:var(--text-3)}
-.post-title{margin:10px 0 6px;font-size:17px;font-weight:600;line-height:1.4;transition:color .2s}
+.post-title{margin:10px 0 6px;font-size:17px;font-weight:600;line-height:1.4;transition:color var(--dur-fast) var(--ease-out)}
 .post:hover .post-title{color:var(--tint-text)}
 .post-excerpt{
   margin:0;font-size:13px;color:var(--text-2);line-height:1.65;
@@ -216,13 +237,17 @@ html[data-theme="dark"] .avatar{border-color:rgba(255,255,255,.25)}
   margin:16px 16px 0;border-radius:var(--radius);
   overflow:hidden;display:flex;flex-direction:column;
   transform:translateY(24px);opacity:0;
-  transition:transform .3s var(--ease),opacity .25s;
+  /* 进入：Fast Out, Slow In（末尾强摩擦），退出：Slow Out, Fast In */
+  transition:transform var(--dur-normal) var(--ease-out),opacity var(--dur-normal) var(--ease-out);
   box-shadow:0 12px 48px rgba(0,0,0,.3);
   /* Aero 毛玻璃：无论透明开关与否，阅读页背景都强制模糊玻璃 */
   background:var(--reader-glass);
   -webkit-backdrop-filter:blur(60px) saturate(185%);
   backdrop-filter:blur(60px) saturate(185%);
   border:1px solid var(--reader-border);
+}
+.reader-layer:not(.show) .reader{
+  transition:transform var(--dur-normal) var(--ease-in),opacity var(--dur-faster) var(--ease-in);
 }
 .reader-body{flex:1;min-height:0;overflow-y:auto;padding:0;background:var(--reader-scrim)}
 .reader-inner{max-width:760px;margin:0 auto;padding:46px 36px 72px}
@@ -264,13 +289,14 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
 .reader-close{
   pointer-events:auto;position:absolute;top:28px;right:32px;z-index:1;
   width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
-  display:grid;place-items:center;font-size:16px;
+  display:grid;place-items:center;
   color:var(--text-1);
   background:var(--acrylic-tint);
   -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
   border:1px solid var(--card-border);box-shadow:0 4px 14px rgba(0,0,0,.2);
-  opacity:0;transition:opacity .25s,transform .18s var(--ease),background .2s;
+  opacity:0;transition:opacity var(--dur-normal) var(--ease-out),transform var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);
 }
+.reader-close svg{width:18px;height:18px;fill:currentColor;display:block}
 .reader-close:hover{background:var(--hover-tint);transform:scale(1.08)}
 
 /* ---------- 404 页面（与阅读页同款 Aero 玻璃） ---------- */
@@ -284,7 +310,7 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
   padding:12px 28px;border:none;border-radius:var(--radius);cursor:pointer;
   font-family:inherit;font-size:13.5px;font-weight:600;color:#fff;
   background:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.22);
-  transition:transform .18s var(--ease),box-shadow .18s var(--ease),filter .18s;
+  transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out),filter var(--dur-fast) var(--ease-out);
 }
 .nf-home:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.28);filter:brightness(1.06)}
 .nf-home:active{transform:scale(.96)}
@@ -301,7 +327,7 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
   width:44px;height:44px;border-radius:7px;
   border:1px solid transparent;background:transparent;
   display:grid;place-items:center;cursor:pointer;
-  transition:transform .15s var(--ease),background .2s,border-color .2s,box-shadow .2s;
+  transition:transform var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);
 }
 .start:hover{
   background:rgba(255,255,255,.55);border-color:rgba(255,255,255,.75);
@@ -322,7 +348,7 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   position:fixed;right:16px;bottom:76px;z-index:60;
   width:380px;max-width:calc(100vw - 24px);border-radius:var(--radius);padding:18px;
   opacity:0;transform:translateY(14px) scale(.98);
-  transition:opacity .2s var(--ease),transform .2s var(--ease);
+  transition:opacity var(--dur-normal) var(--ease-out),transform var(--dur-normal) var(--ease-out);
 }
 .flyout.show{opacity:1;transform:none}
 .flyout-head{font-size:15px;font-weight:600;margin-bottom:14px}
@@ -346,7 +372,7 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   flex:1;padding:7px 0;border-radius:var(--radius);
   border:1px solid var(--card-border);background:var(--seg-bg);
   color:var(--text-2);cursor:pointer;font-size:13px;font-family:inherit;
-  transition:background .2s,color .2s,border-color .2s,box-shadow .2s;
+  transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);
 }
 .theme-btns button:hover{background:var(--hover-tint);color:var(--text-1)}
 .theme-btns button:active{transform:scale(.97)}
@@ -356,16 +382,17 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 }
 
 .swatches{display:flex;gap:10px;flex-wrap:wrap}
-.swatch{width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:outline-color .15s}
+.swatch{width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:outline-color var(--dur-faster) var(--ease-out),transform var(--dur-faster) var(--ease-out)}
+.swatch:hover{transform:scale(1.12)}
 .swatch.active{outline-color:var(--text-3)}
 .swatch.active::after{content:"✓";color:#fff;font-size:13px;display:block;text-align:center;line-height:28px}
 
 .switch{position:relative;display:inline-block;width:40px;height:20px;flex:none}
 .switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;border-radius:99px;background:rgba(128,128,128,.4);transition:.2s;cursor:pointer}
+.slider{position:absolute;inset:0;border-radius:99px;background:rgba(128,128,128,.4);transition:background var(--dur-fast) var(--ease-out);cursor:pointer}
 .slider::before{
   content:"";position:absolute;left:4px;top:4px;width:12px;height:12px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s var(--ease);
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform var(--dur-fast) var(--ease-out);
 }
 .switch input:checked + .slider{background:var(--accent)}
 .switch input:checked + .slider::before{transform:translateX(20px)}
@@ -445,7 +472,9 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 <!-- 文章阅读页 -->
 <div class="overlay" id="overlay" hidden></div>
 <div class="reader-layer" id="readerLayer" hidden role="dialog" aria-modal="true" aria-labelledby="readerTitle">
-  <button class="reader-close" id="readerClose" title="关闭" aria-label="关闭阅读页">✕</button>
+  <button class="reader-close" id="readerClose" title="关闭" aria-label="关闭阅读页">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
+  </button>
   <div class="reader">
     <div class="reader-body" id="readerBody"></div>
   </div>
@@ -453,7 +482,9 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 
 <!-- 404 页面（与阅读页同款 Aero 玻璃，左侧文字 + 右侧角色，左下角返回首页） -->
 <div class="reader-layer" id="nfLayer" hidden role="dialog" aria-modal="true" aria-label="404 页面未找到">
-  <button class="reader-close" id="nfClose" title="关闭" aria-label="关闭 404 页面">✕</button>
+  <button class="reader-close" id="nfClose" title="关闭" aria-label="关闭 404 页面">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
+  </button>
   <div class="reader nf-reader">
     <div class="nf-body">
       <div class="nf-left">
@@ -813,15 +844,21 @@ document.addEventListener('keydown',function(e){
   }
 });
 
-/* Reveal 高亮跟随鼠标 */
+/* Reveal 高亮跟随鼠标：光斑（320px，中心在 160px 处）随指针平滑对准 */
 document.addEventListener('pointermove',function(e){
   var t=e.target;
   var elx=t&&t.closest?t.closest('.reveal'):null;
   if(!elx)return;
   var r=elx.getBoundingClientRect();
-  elx.style.setProperty('--mx',(e.clientX-r.left)+'px');
-  elx.style.setProperty('--my',(e.clientY-r.top)+'px');
+  /* translate 位移 = 指针位置 - 光斑中心半径，让光斑中心正对光标 */
+  elx.style.setProperty('--mx',(e.clientX-r.left-160)+'px');
+  elx.style.setProperty('--my',(e.clientY-r.top-160)+'px');
 });
+document.addEventListener('pointerleave',function(e){
+  var t=e.target;
+  var elx=t&&t.closest?t.closest('.reveal'):null;
+  if(elx)elx.style.setProperty('--mx','0px'),elx.style.setProperty('--my','0px');
+},true);
 
 /* ================= 初始化 ================= */
 /* 先占位加载态，探测到站点根后：修正资源路径、应用设置、加载文章、路由 */
