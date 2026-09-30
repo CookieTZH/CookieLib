@@ -815,9 +815,24 @@ function ensureBase(){
 }
 function fixAssets(){
   document.querySelectorAll('[data-asset]').forEach(function(n){
+    /* 壁纸缩略图（.bg-thumb .thumb）不在此预加载——7 张大图会拖慢首屏，
+     * 等设置面板首次打开时再经 lazyWallpapers() 加载 */
+    if(n.classList.contains('thumb'))return;
+    /* 隐藏层（404）内的资源也延迟到该层首次打开时加载 */
+    if(n.closest('#nfLayer'))return;
     var rel=n.getAttribute('data-asset');
     if(n.tagName==='IMG')n.src=assetUrl(rel);
     else n.style.backgroundImage='url("'+assetUrl(rel)+'")';
+  });
+}
+/* 壁纸缩略图懒加载：设置面板首次打开时才加载全部缩略图（只跑一次） */
+var wallpapersLoaded=false;
+function lazyWallpapers(){
+  if(wallpapersLoaded)return;
+  wallpapersLoaded=true;
+  document.querySelectorAll('.bg-thumb .thumb').forEach(function(n){
+    var rel=n.getAttribute('data-asset');
+    if(rel&&!n.style.backgroundImage)n.style.backgroundImage='url("'+assetUrl(rel)+'")';
   });
 }
 /* 注入本地字体 @font-face（路径走 BASE，保证深层路径下也能正确加载） */
@@ -1025,6 +1040,7 @@ function toast(msg){
 var flyout=el('flyout'),startBtn=el('startBtn');
 function openFlyout(){
   flyout.hidden=false;
+  lazyWallpapers(); /* 首次打开设置面板才加载壁纸缩略图，避免首屏预加载 7 张大图 */
   requestAnimationFrame(function(){flyout.classList.add('show')});
   startBtn.classList.add('open');startBtn.setAttribute('aria-expanded','true');
 }
@@ -1136,7 +1152,9 @@ function openSearch(){
 function closeSearch(){
   searchPanel.classList.remove('show');
   searchPill.classList.remove('open');searchPill.setAttribute('aria-expanded','false');
-  setTimeout(function(){searchPanel.hidden=true},200);
+  /* 立即隐藏并把焦点移出输入框，避免 type=search 的焦点残留触发默认行为或二次路由 */
+  searchPanel.hidden=true;
+  searchInput.blur();
 }
 searchPill.addEventListener('click',function(){searchPanel.hidden?openSearch():closeSearch()});
 searchInput.addEventListener('input',function(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,140)});
@@ -1156,6 +1174,8 @@ searchInput.addEventListener('keydown',function(e){
     items[i].classList.add('active');
     items[i].scrollIntoView({block:'nearest'});
   }else if(e.key==='Enter'){
+    /* 阻止 type=search 的默认行为，并阻断冒泡，避免二次路由导致「闪入后退出」 */
+    e.preventDefault();e.stopPropagation();
     var tgt=cur||items[0];
     if(tgt){closeSearch();nav('articles/'+encodeURIComponent(tgt.dataset.id));}
   }
@@ -1176,6 +1196,12 @@ function open404(){
   readerLayer.hidden=true;readerLayer.classList.remove('show');
   pvLayer.hidden=true;pvLayer.classList.remove('show');
   if(!nfLayer.hidden)return;
+  /* 首次打开 404 时才加载角色图（懒加载，避免首屏多拉一张图） */
+  nfLayer.querySelectorAll('[data-asset]').forEach(function(n){
+    var rel=n.getAttribute('data-asset');
+    if(rel){if(n.tagName==='IMG')n.src=assetUrl(rel);else n.style.backgroundImage='url("'+assetUrl(rel)+'")';}
+    n.removeAttribute('data-asset');
+  });
   nfLayer.hidden=false;overlay.hidden=false;
   requestAnimationFrame(function(){requestAnimationFrame(function(){
     nfLayer.classList.add('show');overlay.classList.add('show');

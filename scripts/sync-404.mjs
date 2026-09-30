@@ -17,10 +17,11 @@ if (existsSync(root + 'dist')) {
   copyFileSync(root + 'index.html', root + 'dist/index.html');
   copyFileSync(root + 'index.html', root + 'dist/404.html');
   if (existsSync(root + '_redirects')) copyFileSync(root + '_redirects', root + 'dist/_redirects');
+  if (existsSync(root + '_headers')) copyFileSync(root + '_headers', root + 'dist/_headers');
   for (const dir of ['pics', 'articles', 'fonts']) {
     if (existsSync(root + dir)) cpSync(root + dir, root + 'dist/' + dir, { recursive: true });
   }
-  console.log('已同步 404.html，并镜像 pics/、articles/、fonts/、_redirects 到 dist/');
+  console.log('已同步 404.html，并镜像 pics/、articles/、fonts/、_redirects、_headers 到 dist/');
 } else {
   console.log('已同步 404.html');
 }
