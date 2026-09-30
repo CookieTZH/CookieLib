@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="我的个人空间 · Fluent Design 桌面化设计">
 <title>Cookiesの海棠乡</title>
-<link rel="icon" type="image/jpeg" href="pictures/avatar/avatar.jpg">
+<link rel="icon" type="image/jpeg" href="/pics/avatar/avatar.jpg">
 <script>
 /* 提前应用已保存的个性化设置，避免刷新时闪烁 */
 (function(){try{
@@ -168,7 +168,42 @@ body{
   height:100vh;height:100dvh;padding:20px;
 }
 .side{display:flex;flex-direction:column;gap:14px;min-height:0}
-.side-reserved{flex:1}/* 左下角留白，为以后准备 */
+
+/* ---------- 左下角全站搜索 ---------- */
+.side-search{margin-top:auto;position:relative;flex:none}
+.search-pill{
+  display:flex;align-items:center;gap:12px;width:100%;
+  padding:13px 16px;cursor:pointer;font-family:inherit;color:inherit;text-align:left;
+  transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);
+}
+.search-pill svg{width:17px;height:17px;color:var(--text-2);flex:none}
+.search-pill:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.2)}
+.search-pill:active{transform:scale(.98)}
+.sp-label{font-size:14px;color:var(--text-2)}
+.sp-kbd{margin-left:auto;font-size:11px;color:var(--text-3);border:1px solid var(--card-border);border-radius:4px;padding:2px 7px}
+.search-panel{
+  position:absolute;left:0;right:0;bottom:58px;z-index:66;
+  border-radius:var(--radius);overflow:hidden;
+  opacity:0;transform:translateY(10px);
+  transition:opacity var(--dur-normal) var(--ease-out),transform var(--dur-normal) var(--ease-out);
+}
+.search-panel.show{opacity:1;transform:none}
+.sp-inputrow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--card-border)}
+.sp-inputrow svg{width:16px;height:16px;color:var(--text-3);flex:none}
+.sp-inputrow input{flex:1;min-width:0;border:none;background:none;outline:none;font:inherit;font-size:14px;color:var(--text-1)}
+.sp-results{max-height:46vh;overflow:auto;padding:6px}
+.sp-hint{padding:18px 12px;text-align:center;color:var(--text-3);font-size:13px;line-height:1.8}
+.sp-item{
+  display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;
+  padding:10px 12px;border:none;background:none;border-radius:6px;
+  cursor:pointer;font-family:inherit;color:inherit;
+  transition:background var(--dur-faster) var(--ease-out);
+}
+.sp-item:hover,.sp-item.active{background:var(--hover-tint)}
+.sp-title{font-size:13.5px;font-weight:600;color:var(--text-1);line-height:1.5}
+.sp-meta{font-size:11.5px;color:var(--text-3)}
+.sp-snip{font-size:12px;color:var(--text-2);line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sp-item mark{background:color-mix(in srgb,var(--accent) 24%,transparent);color:var(--tint-text);border-radius:3px;padding:0 1px}
 
 .card{border-radius:var(--radius)}
 
@@ -372,6 +407,34 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
   filter:drop-shadow(0 12px 26px rgba(0,0,0,.28));
 }
 
+/* ---------- 图片查看器（/pictures/<path> 路由，与阅读页同款 Aero 玻璃） ---------- */
+.pv-stage{
+  flex:1;min-height:0;overflow:auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:72px 28px 20px;background:var(--reader-scrim);
+}
+.pv-stage img{
+  max-width:100%;max-height:100%;width:auto;height:auto;
+  border-radius:10px;box-shadow:0 16px 44px rgba(0,0,0,.35);
+  /* 棋盘格衬底：透明 PNG 也能看出轮廓 */
+  background:conic-gradient(rgba(128,128,128,.16) 0 25%,transparent 0 50%,rgba(128,128,128,.16) 0 75%,transparent 0) 0 0/22px 22px;
+}
+.pv-stage.loading::before{
+  content:"";width:30px;height:30px;flex:none;
+  border:3px solid rgba(128,128,128,.25);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 1s linear infinite;
+}
+.pv-err{text-align:center;color:var(--text-2);font-size:14px;line-height:2.1}
+.pv-err b{color:var(--text-1);word-break:break-all}
+.pv-bar{
+  flex:none;display:flex;align-items:center;gap:14px;
+  padding:12px 18px;border-top:1px solid var(--reader-border);background:var(--reader-scrim);
+}
+.pv-name{font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv-dim{font-size:12px;color:var(--text-3);flex:none}
+.pv-raw{margin-left:auto;font-size:12.5px;color:var(--accent);text-decoration:none;flex:none}
+.pv-raw:hover{text-decoration:underline}
+
 /* ---------- 右下角 Windows 徽标（Win11 任务栏样式） ---------- */
 /* 平时：只有徽标，无底板；悬停：浅色底板浮现；按下/打开：底板更实、带描边 */
 .start{
@@ -403,16 +466,35 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   transition:opacity var(--dur-normal) var(--ease-out),transform var(--dur-normal) var(--ease-out);
 }
 .flyout.show{opacity:1;transform:none}
+/* 移动端抽屉的关闭按钮（右上角，桌面端隐藏——桌面点外部即可关闭） */
+.flyout-close{
+  position:absolute;top:12px;right:12px;width:34px;height:34px;
+  border-radius:50%;border:1px solid var(--card-border);cursor:pointer;
+  background:var(--hover-tint);color:var(--text-1);
+  display:none;place-items:center;
+  transition:background var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
+}
+.flyout-close svg{width:15px;height:15px;fill:currentColor;display:block}
+.flyout-close:hover{background:rgba(128,128,128,.28);transform:scale(1.06)}
+.flyout-close:active{transform:scale(.94)}
 .flyout-head{font-size:15px;font-weight:600;margin-bottom:14px}
 .group{margin-bottom:14px}
 .group-title{font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:8px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .row .group-title{margin-bottom:0}
 
-.bg-picker{display:flex;flex-wrap:wrap;gap:12px}
-.bg-thumb{background:none;border:none;cursor:pointer;padding:0}
+/* 壁纸选择：一条横向滚动带（桌面/移动一致），不再多行堆叠挤占空间 */
+.bg-picker{
+  display:flex;flex-wrap:nowrap;gap:12px;overflow-x:auto;
+  padding:8px 8px 14px;margin:0 -2px;border-radius:8px;
+  background:var(--seg-bg);
+  scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.5) transparent;
+  scroll-snap-type:x proximity;
+}
+.bg-picker::-webkit-scrollbar{height:8px}
+.bg-thumb{background:none;border:none;cursor:pointer;padding:0;flex:none;scroll-snap-align:start}
 .thumb{
-  width:158px;height:88px;border-radius:6px;background-size:cover;background-position:center;
+  width:150px;height:84px;border-radius:6px;background-size:cover;background-position:center;
   border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);transition:border-color .2s,box-shadow .2s;
   display:block;
 }
@@ -471,7 +553,9 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   .avatar{width:56px;height:56px;margin:0}
   .profile-name{font-size:16px}
   .github{flex:1 1 auto}
-  .side-reserved{display:none}
+  .side-search{flex:1 1 100%}
+  .sp-kbd{display:none}
+  .flyout-close{display:grid}
   /* 底部抽屉：从屏幕底部滑出，全宽、顶部圆角，拇指热区友好 */
   .flyout{
     left:0;right:0;bottom:0;width:100%;
@@ -486,6 +570,7 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   .start.open{transform:translateY(72px);pointer-events:none}
   .reader{margin:0;border-radius:0}
   .reader-close{top:14px;right:16px}
+  .pv-stage{padding:60px 14px 16px}
   .reader-inner{padding:36px 22px 60px}
   .reader-title{font-size:24px}
   /* 低端安卓 GPU 压力大，移动端降低 blur 半径保流畅 */
@@ -508,7 +593,7 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   <!-- 左侧栏 -->
   <aside class="side">
     <section class="card acrylic profile">
-      <div class="avatar"><img data-asset="pictures/avatar/avatar.jpg" alt="头像"></div>
+      <div class="avatar"><img data-asset="pics/avatar/avatar.jpg" alt="头像"></div>
       <div class="profile-text">
         <div class="profile-name">海棠花下</div>
         <div class="profile-sig">喜欢折腾代码的学生 · 信息技术拓展社团</div>
@@ -524,8 +609,21 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
       <span class="gh-arrow" aria-hidden="true"></span>
     </a>
 
-    <!-- 左下角：预留区域 -->
-    <div class="side-reserved" aria-hidden="true"></div>
+    <!-- 左下角：全站搜索（原预留区域） -->
+    <div class="side-search">
+      <div class="search-panel acrylic-strong" id="searchPanel" hidden>
+        <div class="sp-inputrow">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="5.25" stroke="currentColor" stroke-width="1.6"/><path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="searchInput" type="search" placeholder="搜索文章标题、标签、正文…" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="sp-results" id="searchResults"><div class="sp-hint">输入关键词搜索全站文章，回车打开第一篇结果</div></div>
+      </div>
+      <button class="card acrylic reveal search-pill" id="searchPill" aria-label="全站搜索" aria-expanded="false">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="5.25" stroke="currentColor" stroke-width="1.6"/><path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="sp-label">搜索</span>
+        <span class="sp-kbd">Ctrl K</span>
+      </button>
+    </div>
   </aside>
 
   <!-- 主内容区 -->
@@ -561,30 +659,60 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
         <button class="nf-home" id="nfHome">返回首页</button>
       </div>
       <div class="nf-right">
-        <img data-asset="pictures/404/ciallo.png" alt="Ciallo 角色">
+        <img data-asset="pics/404/ciallo.png" alt="Ciallo 角色">
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 图片查看器：/pictures/<path> 路由的毛玻璃查看层 -->
+<div class="reader-layer" id="pvLayer" hidden role="dialog" aria-modal="true" aria-label="图片查看器">
+  <button class="reader-close" id="pvClose" title="关闭" aria-label="关闭图片查看器">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
+  </button>
+  <div class="reader">
+    <div class="pv-stage" id="pvStage">
+      <img id="pvImg" alt="">
+      <div class="pv-err" id="pvErr" hidden>图片不存在或路径不对<br><b id="pvErrPath"></b></div>
+    </div>
+    <div class="pv-bar">
+      <span class="pv-name" id="pvName"></span>
+      <span class="pv-dim" id="pvDim"></span>
+      <a class="pv-raw" id="pvRaw" target="_blank" rel="noopener">查看原图</a>
     </div>
   </div>
 </div>
 
 <!-- 个性化设置面板 -->
 <div class="flyout acrylic-strong" id="flyout" hidden>
+  <button class="flyout-close" id="flyoutClose" title="关闭" aria-label="关闭设置">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
+  </button>
   <div class="flyout-head">个性化</div>
 
   <div class="group">
     <div class="group-title">背景图片</div>
     <div class="bg-picker" id="bgPicker">
       <button class="bg-thumb" data-bg="dark">
-        <span class="thumb" data-asset="pictures/background/dark.jpg"></span>
+        <span class="thumb" data-asset="pics/background/dark.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="wp">
-        <span class="thumb" data-asset="pictures/background/wp.jpg"></span>
+        <span class="thumb" data-asset="pics/background/wp.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="pic4">
-        <span class="thumb" data-asset="pictures/background/pic4.jpg"></span>
+        <span class="thumb" data-asset="pics/background/pic4.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="pic3">
-        <span class="thumb" data-asset="pictures/background/pic3.jpg"></span>
+        <span class="thumb" data-asset="pics/background/pic3.jpg"></span>
+      </button>
+      <button class="bg-thumb" data-bg="konata">
+        <span class="thumb" data-asset="pics/background/21898.png"></span>
+      </button>
+      <button class="bg-thumb" data-bg="rainbus">
+        <span class="thumb" data-asset="pics/background/175951.jpg"></span>
+      </button>
+      <button class="bg-thumb" data-bg="stage">
+        <span class="thumb" data-asset="pics/background/1749209305501_P30QG.jpg"></span>
       </button>
     </div>
   </div>
@@ -647,12 +775,15 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 var posts = [];
 
 /* ================= 站点根路径 =================
- * 站点可部署在任意子路径（GitHub Pages 的 /repo/），也会被 SPA 回退
- * 服务在深层路径上（如 /pictures/sb）。这里推断站点根目录：
- * 常规路径（/ 或 /index.html 结尾）同步可得；深层路径启动后逐级向上探测。
+ * 站点可部署在任意子路径（GitHub Pages 的 /repo/）。常规路径（/ 或 /index.html）
+ * 同步可得站点根；/articles/、/pictures/ 路径路由只在根部署下启用（由 Netlify
+ * _redirects 的 SPA 回退应答，真实存在的文件优先于重写）；其余深层路径（如被
+ * 404.html 应答的未知路径）启动后逐级向上探测。
  */
 var BASE=(function(){
   var p=location.pathname;
+  /* 路径路由命中：直接以站点根为 BASE，免去逐级探测 */
+  if(/^\/(articles|pictures)(\/|$)/.test(p))return '/';
   if(/\/index\.html$/i.test(p))return p.slice(0,-10); /* 去掉 index.html（10 字符） */
   if(/\/$/.test(p))return p;
   return null; /* 深层路径，待探测 */
@@ -708,10 +839,21 @@ var settings=(function(){
 var el=function(id){return document.getElementById(id)};
 var wpLayers=[el('wpA'),el('wpB')],wpActive=0,lastBg=null;
 
+/* 壁纸清单：key = 设置项，value = 文件名（扩展名各异，新增壁纸在此登记） */
+var WP_FILES={
+  dark:'dark.jpg',
+  wp:'wp.jpg',
+  pic4:'pic4.jpg',
+  pic3:'pic3.jpg',
+  konata:'21898.png',
+  rainbus:'175951.jpg',
+  stage:'1749209305501_P30QG.jpg'
+};
 function setWallpaper(bg,instant){
   if(bg===lastBg)return;
+  var file=WP_FILES[bg]||WP_FILES.wp;
   var next=wpLayers[1-wpActive],cur=wpLayers[wpActive];
-  next.style.backgroundImage='url("'+assetUrl('pictures/background/'+bg+'.jpg')+'")';
+  next.style.backgroundImage='url("'+assetUrl('pics/background/'+file)+'")';
   if(instant){
     next.style.transition='none';next.style.opacity='1';void next.offsetWidth;next.style.transition='';
     cur.style.transition='none';cur.style.opacity='0';void cur.offsetWidth;cur.style.transition='';
@@ -757,13 +899,14 @@ function renderPosts(){
 var overlay=el('overlay'),readerLayer=el('readerLayer'),readerBody=el('readerBody');
 var nfLayer=el('nfLayer');
 function openArticle(p){
-  /* 独占显示：先瞬时关掉 404 层 */
+  /* 独占显示：先瞬时关掉 404 层与图片查看器 */
   nfLayer.hidden=true;nfLayer.classList.remove('show');
+  pvLayer.hidden=true;pvLayer.classList.remove('show');
   var chips=p.tags.map(function(t){return '<span class="chip">'+t+'</span>'}).join('');
   readerBody.innerHTML='<div class="reader-inner">'
     +'<h1 class="reader-title" id="readerTitle">'+p.title+'</h1>'
     +'<div class="reader-credits">'
-      +'<div class="reader-avatar"><img src="'+assetUrl('pictures/avatar/avatar.jpg')+'" alt="头像"></div>'
+      +'<div class="reader-avatar"><img src="'+assetUrl('pics/avatar/avatar.jpg')+'" alt="头像"></div>'
       +'<div class="reader-by">'
         +'<span class="reader-name">海棠花下</span>'
         +'<span class="reader-home">SmartTeachNanfang-Club · 信息技术拓展社团</span>'
@@ -776,6 +919,19 @@ function openArticle(p){
     +'<div class="reader-content">'+p.content+'</div>'
   +'</div>';
   enhanceCodeBlocks(readerBody);
+  /* 正文图片：路径统一修正到站点根（兼容旧 pictures/ 写法）；点击在 /pictures/ 查看器中打开 */
+  readerBody.querySelectorAll('.reader-content img').forEach(function(im){
+    var s=im.getAttribute('src')||'';
+    if(/^https?:/i.test(s))return;
+    var rel=s.replace(/^\//,'').replace(/^pictures\//,'pics/');
+    if(!/^pics\//.test(rel))return;
+    im.src=assetUrl(rel);
+    im.style.cursor='zoom-in';
+    im.addEventListener('click',function(){
+      var mm=(im.getAttribute('src')||'').match(/\/pics\/(.+)$/);
+      if(mm)nav('pictures/'+mm[1]);
+    });
+  });
   readerLayer.hidden=false;overlay.hidden=false;
   requestAnimationFrame(function(){requestAnimationFrame(function(){
     readerLayer.classList.add('show');overlay.classList.add('show');
@@ -786,7 +942,7 @@ function closeArticle(){
   if(readerLayer.hidden)return;
   readerLayer.classList.remove('show');overlay.classList.remove('show');
   setTimeout(function(){
-    readerLayer.hidden=true;overlay.hidden=nfLayer.hidden;
+    readerLayer.hidden=true;overlay.hidden=nfLayer.hidden&&pvLayer.hidden;
     readerBody.scrollTop=0;
   },280);
 }
@@ -881,6 +1037,7 @@ startBtn.addEventListener('click',function(e){e.stopPropagation();flyout.hidden?
 document.addEventListener('pointerdown',function(e){
   if(!flyout.hidden&&!flyout.contains(e.target)&&!startBtn.contains(e.target))closeFlyout();
 });
+el('flyoutClose').addEventListener('click',closeFlyout);
 
 el('bgPicker').addEventListener('click',function(e){
   var b=e.target.closest('.bg-thumb');if(b)setSetting('bg',b.dataset.bg);
@@ -914,10 +1071,110 @@ el('swatches').addEventListener('click',function(e){
   var s=e.target.closest('.swatch');if(s)setSetting('accent',s.dataset.accent);
 });
 
+/* ================= 全站搜索（左下角） ================= */
+var searchPanel=el('searchPanel'),searchInput=el('searchInput'),
+    searchResults=el('searchResults'),searchPill=el('searchPill');
+var searchIndex=null,searchTimer=null;
+function escHtml(s){return String(s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})}
+/* 关键词高亮：先转义再包裹 <mark>，避免注入 */
+function hi(text,q){
+  var out='',low=String(text).toLowerCase(),ql=q.toLowerCase(),i=0,idx;
+  while((idx=low.indexOf(ql,i))>-1){
+    out+=escHtml(text.slice(i,idx))+'<mark>'+escHtml(text.substr(idx,q.length))+'</mark>';
+    i=idx+q.length;
+    if(out.length>500)break;
+  }
+  return out+escHtml(text.slice(i));
+}
+function searchIndexReady(){
+  if(searchIndex)return Promise.resolve(searchIndex);
+  if(!postsReady)return Promise.resolve(null);
+  return postsReady.then(function(){
+    searchIndex=posts.map(function(p){
+      var d=document.createElement('div');d.innerHTML=p.content||'';
+      return{id:p.id,title:p.title||'',date:p.date||'',tags:p.tags||[],excerpt:p.excerpt||'',
+        text:(d.textContent||'').replace(/\s+/g,' ').trim()};
+    });
+    return searchIndex;
+  });
+}
+function runSearch(){
+  var q=searchInput.value.trim();
+  if(!q){searchResults.innerHTML='<div class="sp-hint">输入关键词搜索全站文章，回车打开第一篇结果</div>';return;}
+  searchIndexReady().then(function(idx){
+    /* 面板已关或关键词已变时丢弃过期结果 */
+    if(searchPanel.hidden||searchInput.value.trim()!==q)return;
+    if(!idx){searchResults.innerHTML='<div class="sp-hint">文章还在加载…</div>';return;}
+    var ql=q.toLowerCase(),res=[];
+    idx.forEach(function(p){
+      var s=0,snip='';
+      if(p.title.toLowerCase().indexOf(ql)>-1)s+=5;
+      p.tags.forEach(function(t){if(String(t).toLowerCase().indexOf(ql)>-1)s+=3;});
+      if(p.excerpt.toLowerCase().indexOf(ql)>-1)s+=2;
+      var at=p.text.toLowerCase().indexOf(ql);
+      if(at>-1){s+=1;snip=p.text.substr(Math.max(0,at-30),90);}
+      if(s)res.push({p:p,s:s,snip:snip});
+    });
+    res.sort(function(a,b){return b.s-a.s});
+    if(!res.length){searchResults.innerHTML='<div class="sp-hint">没有找到与「'+escHtml(q)+'」相关的内容</div>';return;}
+    searchResults.innerHTML=res.slice(0,8).map(function(r){
+      return '<button class="sp-item" data-id="'+escHtml(r.p.id)+'">'
+        +'<span class="sp-title">'+hi(r.p.title,q)+'</span>'
+        +'<span class="sp-meta">'+escHtml(r.p.date)+' · '+r.p.tags.map(escHtml).join(' / ')+'</span>'
+        +(r.snip?'<span class="sp-snip">'+hi(r.snip,q)+'</span>':'')
+        +'</button>';
+    }).join('');
+  });
+}
+function openSearch(){
+  searchPanel.hidden=false;
+  requestAnimationFrame(function(){searchPanel.classList.add('show')});
+  searchPill.classList.add('open');searchPill.setAttribute('aria-expanded','true');
+  searchInput.focus();
+  runSearch();
+}
+function closeSearch(){
+  searchPanel.classList.remove('show');
+  searchPill.classList.remove('open');searchPill.setAttribute('aria-expanded','false');
+  setTimeout(function(){searchPanel.hidden=true},200);
+}
+searchPill.addEventListener('click',function(){searchPanel.hidden?openSearch():closeSearch()});
+searchInput.addEventListener('input',function(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,140)});
+searchResults.addEventListener('click',function(e){
+  var it=e.target.closest('.sp-item');if(!it)return;
+  closeSearch();nav('articles/'+encodeURIComponent(it.dataset.id));
+});
+searchInput.addEventListener('keydown',function(e){
+  var items=searchResults.querySelectorAll('.sp-item');
+  var cur=searchResults.querySelector('.sp-item.active');
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    e.preventDefault();
+    if(!items.length)return;
+    var i=Array.prototype.indexOf.call(items,cur);
+    i=e.key==='ArrowDown'?(i+1)%items.length:(i-1+items.length)%items.length;
+    if(cur)cur.classList.remove('active');
+    items[i].classList.add('active');
+    items[i].scrollIntoView({block:'nearest'});
+  }else if(e.key==='Enter'){
+    var tgt=cur||items[0];
+    if(tgt){closeSearch();nav('articles/'+encodeURIComponent(tgt.dataset.id));}
+  }
+});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==='k'){
+    e.preventDefault();
+    searchPanel.hidden?openSearch():closeSearch();
+  }
+});
+document.addEventListener('pointerdown',function(e){
+  if(!searchPanel.hidden&&!searchPanel.contains(e.target)&&!searchPill.contains(e.target))closeSearch();
+});
+
 /* ================= 404 页面 ================= */
 function open404(){
-  /* 独占显示：先瞬时关掉阅读层 */
+  /* 独占显示：先瞬时关掉阅读层与图片查看器 */
   readerLayer.hidden=true;readerLayer.classList.remove('show');
+  pvLayer.hidden=true;pvLayer.classList.remove('show');
   if(!nfLayer.hidden)return;
   nfLayer.hidden=false;overlay.hidden=false;
   requestAnimationFrame(function(){requestAnimationFrame(function(){
@@ -928,55 +1185,131 @@ function close404(){
   if(nfLayer.hidden)return;
   nfLayer.classList.remove('show');
   setTimeout(function(){
-    nfLayer.hidden=true;overlay.hidden=readerLayer.hidden;
+    nfLayer.hidden=true;overlay.hidden=readerLayer.hidden&&pvLayer.hidden;
   },280);
 }
 el('nfClose').addEventListener('click',goHome);
 el('nfHome').addEventListener('click',goHome);
 
-/* ================= 路由 =================
- * 路径级：只有站点根是有效地址，其余路径（如 /pictures/sb）一律 404；
- * 哈希级：#/ 首页 | #/post/<id> 文章 | 其他任何值 404。
- */
-function isRootPath(){
-  var p=location.pathname.replace(/\/index\.html$/i,'');
-  if(!/\/$/.test(p))p+='/';
-  return p===BASE;
+/* ================= 图片查看器（/pictures/<path>） =================
+ * 路径 /pictures/<path> 由 Netlify _redirects 回退到本页，这里解析路径并
+ * 加载 pics/<path> 的图片（无扩展名时自动尝试常见后缀）。 */
+var pvLayer=el('pvLayer'),pvStage=el('pvStage'),pvImg=el('pvImg'),pvErr=el('pvErr'),pvErrPath=el('pvErrPath'),
+    pvName=el('pvName'),pvDim=el('pvDim'),pvRaw=el('pvRaw');
+var PV_EXTS=['','.jpg','.jpeg','.png','.webp','.gif','.avif'];
+var pvTries=0,pvPath='';
+function openPicture(path){
+  /* 独占显示：先瞬时关掉阅读层与 404 层 */
+  readerLayer.hidden=true;readerLayer.classList.remove('show');
+  nfLayer.hidden=true;nfLayer.classList.remove('show');
+  pvPath=path;pvTries=0;
+  pvName.textContent=decodeURIComponent(path.split('/').pop()||path);
+  pvErr.hidden=true;pvErrPath.textContent='';
+  pvImg.style.display='none';pvImg.removeAttribute('src');
+  pvDim.textContent='';
+  pvStage.classList.add('loading');
+  pvLayer.hidden=false;overlay.hidden=false;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    pvLayer.classList.add('show');overlay.classList.add('show');
+  })});
+  el('pvClose').focus();
+  tryLoadPicture();
 }
-function goHome(){
-  /* 从深层路径的 404 返回时，必须整页跳回站点根，仅改哈希无法离开 */
-  if(!isRootPath()){location.href=BASE;return;}
-  location.hash='#/';
-}
-function handleRoute(){
-  if(!isRootPath()){closeArticle();open404();return;}
-  var hash=location.hash||'#/';
-  var mPost=hash.match(/^#\/post\/(.+)$/);
-  if(hash!=='#/'&&hash!=='#'&&hash!==''&&!mPost){
-    closeArticle();open404();return;
+function tryLoadPicture(){
+  if(pvLayer.hidden)return;
+  if(pvTries>=PV_EXTS.length){
+    pvStage.classList.remove('loading');
+    pvErrPath.textContent='/pictures/'+pvPath;
+    pvErr.hidden=false;
+    return;
   }
-  close404();
-  if(!mPost){closeArticle();return;}
-  var id=decodeURIComponent(mPost[1]);
+  var src=assetUrl('pics/'+pvPath+PV_EXTS[pvTries++]);
+  pvRaw.href=src;
+  pvImg.onload=pictureOk;
+  pvImg.onerror=tryLoadPicture;
+  pvImg.src=src;
+}
+function pictureOk(){
+  if(pvLayer.hidden)return;
+  pvStage.classList.remove('loading');
+  pvImg.style.display='';
+  pvDim.textContent=pvImg.naturalWidth+' × '+pvImg.naturalHeight+' px';
+}
+function closePicture(){
+  if(pvLayer.hidden)return;
+  pvLayer.classList.remove('show');
+  setTimeout(function(){
+    pvLayer.hidden=true;overlay.hidden=readerLayer.hidden&&nfLayer.hidden;
+    pvImg.removeAttribute('src');pvImg.onerror=null;
+    pvStage.classList.remove('loading');pvErr.hidden=true;
+  },280);
+}
+el('pvClose').addEventListener('click',goHome);
+
+/* ================= 路由 =================
+ * 路径级路由（配合 Netlify _redirects 的 SPA 回退，真实文件优先于重写）：
+ *   /                    首页
+ *   /articles/<id>       文章阅读页
+ *   /pictures/<path>     图片查看器（查看 pics/<path> 的图片）
+ *   其他任何路径          404 页面
+ * 兼容旧版哈希路由：#/post/<id> 原地升级为 /articles/<id>。
+ */
+function pathAfterBase(){
+  var p;
+  try{p=decodeURIComponent(location.pathname)}catch(e){p=location.pathname}
+  if(BASE&&p.indexOf(BASE)===0)p=p.slice(BASE.length);
+  p=p.replace(/index\.html$/i,'');
+  return p.replace(/^\/+|\/+$/g,'');
+}
+function nav(path){
+  history.pushState(null,'',assetUrl(path));
+  handleRoute();
+}
+function goHome(){nav('');}
+function routePost(id){
   postsReady.then(function(){
     /* 等待期间路由可能又变了，校验一次 */
-    var cur=location.hash.match(/^#\/post\/(.+)$/);
-    if(!cur||decodeURIComponent(cur[1])!==id)return;
+    var cur=pathAfterBase().match(/^articles\/(.+)$/);
+    if(!cur||cur[1]!==id)return;
     var p=null;
     for(var i=0;i<posts.length;i++){if(posts[i].id===id){p=posts[i];break;}}
-    if(p){openArticle(p);}else{closeArticle();open404();}
+    if(p){close404();closePicture();openArticle(p);}
+    else{closeArticle();closePicture();open404();}
   });
+}
+function handleRoute(){
+  var seg=pathAfterBase();
+  /* 旧哈希 #/post/<id> 原地升级为路径路由 */
+  var legacy=(location.hash||'').match(/^#\/post\/(.+)$/);
+  if(legacy&&!seg){
+    var lid='';
+    try{lid=decodeURIComponent(legacy[1])}catch(e){lid=legacy[1]}
+    history.replaceState(null,'',assetUrl('articles/'+lid));
+    seg='articles/'+lid;
+  }
+  var m;
+  if((m=seg.match(/^articles\/(.+)$/))&&m[1]){routePost(m[1]);return;}
+  if((m=seg.match(/^pictures\/(.+)$/))&&m[1]){closeArticle();close404();openPicture(m[1]);return;}
+  if(seg===''){
+    var h=location.hash||'';
+    /* 根路径上的杂散哈希（非 #/ 与 #/post/）视为 404，与旧版行为一致 */
+    if(h&&h!=='#/'&&h!=='#'){closeArticle();closePicture();open404();return;}
+    closeArticle();close404();closePicture();return;
+  }
+  closeArticle();closePicture();open404();
 }
 
 /* ================= 事件委托 ================= */
 document.addEventListener('click',function(e){
   var post=e.target.closest('.post');
-  if(post)location.hash='#/post/'+encodeURIComponent(post.dataset.id);
+  if(post)nav('articles/'+encodeURIComponent(post.dataset.id));
 });
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
     if(!readerLayer.hidden)goHome();
     else if(!nfLayer.hidden)goHome();
+    else if(!pvLayer.hidden)goHome();
+    else if(!searchPanel.hidden)closeSearch();
     else if(!flyout.hidden)closeFlyout();
   }
 });
@@ -1007,6 +1340,7 @@ ensureBase().then(function(){
   applySettings(true);
   postsReady=loadPosts();
   handleRoute();
+  window.addEventListener('popstate',handleRoute);
   window.addEventListener('hashchange',handleRoute);
 });
 

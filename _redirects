@@ -1,0 +1,7 @@
+# SPA 回退：文章路径路由 + 图片查看器
+# Netlify 规则：真实存在的文件优先于 200 重写，
+# 因此 /articles/*.json、/pics/* 等静态文件不受影响，照常直接返回。
+/articles/*    /index.html    200
+/articles      /index.html    200
+/pictures/*    /index.html    200
+/pictures      /index.html    200
