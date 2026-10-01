@@ -877,10 +877,35 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   .pv-stage{padding:60px 14px 16px}
   .reader-inner{padding:36px 22px 60px}
   .reader-title{font-size:24px}
-  /* 低端安卓 GPU 压力大，移动端降低 blur 半径保流畅 */
-  .acrylic{-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%)}
-  .acrylic-strong{-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%)}
-  .reader{-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%)}
+  /* ---------- 移动端材质降级（性能开关） ----------
+   * 手机上每出现一个 backdrop-filter 面片，GPU 就要为它单独做一遍
+   * 「回读背景 → 模糊 → 合成」。首页卡片类面片一共 6 个（合计覆盖约 0.8 个
+   * 视口），中低端机在首屏绘制和滚动时都会明显掉帧；而它带来的观感收益
+   * 很小 —— tint 本身已有约 0.8 的不透明度，背景透过来的部分本来就很少。
+   * 所以移动端不降半径、直接把卡片模糊整个去掉，改用稍实一点的 tint 顶替
+   * （实测：卡片平均亮度只比原来高约 +13/255，深色壁纸区仅 +1.5），
+   * 采样面片 6 → 0，回归纯合成。
+   * :not([data-transparency="off"]) 是为了兜住「关闭透明」那一档 ——
+   * 那一档必须保持纯实色，不能被这里的半透明 tint 覆盖。 */
+  html:not([data-transparency="off"]){
+    --acrylic-tint:color-mix(in srgb,var(--accent) 9%,rgba(255,255,255,.82));
+    --acrylic-strong-tint:color-mix(in srgb,var(--accent) 10%,rgba(255,255,255,.95));
+  }
+  html[data-theme="dark"]:not([data-transparency="off"]){
+    --acrylic-tint:color-mix(in srgb,var(--accent) 12%,rgba(30,30,30,.88));
+    --acrylic-strong-tint:color-mix(in srgb,var(--accent) 14%,rgba(28,28,28,.94));
+  }
+  .acrylic,.acrylic-strong{-webkit-backdrop-filter:none;backdrop-filter:none}
+  /* 阅读页/图片查看器只保留唯一的一层玻璃（沉浸感的关键），半径 24 → 16px */
+  .reader{-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
+  /* 移动端阅读页是全出血的（margin:0;border-radius:0），遮罩整层被盖住 ——
+   * 也就是说这层全屏 blur 100% 是白烧的，直接去掉。 */
+  .overlay{-webkit-backdrop-filter:none;backdrop-filter:none}
+  /* 悬浮关闭钮同理：去掉自身模糊，用实一点的面色，少一个采样面片 */
+  .reader-close{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--acrylic-strong-tint)}
+  /* 代码复制钮：它背后就是代码块自身的实色底，模糊完全看不出来；
+   * 而「模糊层套在模糊层里」是最贵的一种组合，直接去掉。 */
+  .code-copy{-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 </style>
 </head>
@@ -1067,25 +1092,25 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
     <div class="group-title">背景图片</div>
     <div class="bg-picker" id="bgPicker">
       <button class="bg-thumb" data-bg="dark">
-        <span class="thumb" data-asset="pics/background/dark.jpg"></span>
+        <span class="thumb" data-asset="pics/background/t/dark.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="wp">
-        <span class="thumb" data-asset="pics/background/wp.jpg"></span>
+        <span class="thumb" data-asset="pics/background/t/wp.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="pic4">
-        <span class="thumb" data-asset="pics/background/pic4.jpg"></span>
+        <span class="thumb" data-asset="pics/background/t/pic4.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="pic3">
-        <span class="thumb" data-asset="pics/background/pic3.jpg"></span>
+        <span class="thumb" data-asset="pics/background/t/pic3.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="konata">
-        <span class="thumb" data-asset="pics/background/21898.png"></span>
+        <span class="thumb" data-asset="pics/background/t/21898.png"></span>
       </button>
       <button class="bg-thumb" data-bg="rainbus">
-        <span class="thumb" data-asset="pics/background/175951.jpg"></span>
+        <span class="thumb" data-asset="pics/background/t/175951.jpg"></span>
       </button>
       <button class="bg-thumb" data-bg="stage">
-        <span class="thumb" data-asset="pics/background/1749209305501_P30QG.jpg"></span>
+        <span class="thumb" data-asset="pics/background/t/1749209305501_P30QG.jpg"></span>
       </button>
     </div>
   </div>
