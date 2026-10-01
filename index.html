@@ -69,6 +69,8 @@ html[data-theme="light"]{
   --reader-border:rgba(255,255,255,.55);
   /* 玻璃很透时，用一层 opacity 衬底保证文字可读性 */
   --reader-scrim:rgba(255,255,255,.28);
+  /* 放大播放页的遮罩 */
+  --np-scrim:rgba(244,246,250,.42);
 }
 html[data-theme="dark"]{
   --text-1:#ffffff;
@@ -103,6 +105,8 @@ html[data-theme="dark"]{
   --reader-border:rgba(255,255,255,.14);
   /* 玻璃很透时，用一层 opacity 衬底保证文字可读性 */
   --reader-scrim:rgba(0,0,0,.32);
+  /* 放大播放页的遮罩 */
+  --np-scrim:rgba(0,0,0,.46);
 }
 /* 透明效果关闭：卡片必须真正变成实色。
  * 注意 .acrylic / .acrylic-strong 的 background 用的是 *-tint 变量，
@@ -247,8 +251,11 @@ body{
 .side-music{flex:1 1 auto;min-height:0;padding:12px;display:flex;flex-direction:column}
 .mu-main{display:flex;gap:12px;flex:1;min-height:0}
 .mu-left{width:104px;flex:none;display:flex;flex-direction:column;justify-content:space-between}
+/* 封面容器：只为承载「歌曲故事」浮层而存在。迷你卡片里宽高与封面一致，
+ * 所以这层包裹对现有布局零影响。 */
+.mu-coverwrap{position:relative;flex:none}
 .mu-cover{
-  position:relative;width:104px;height:104px;border:none;padding:0;cursor:pointer;
+  position:relative;width:100%;height:104px;border:none;padding:0;cursor:pointer;
   border-radius:8px;overflow:hidden;background:var(--seg-bg);
   box-shadow:0 4px 14px rgba(0,0,0,.18);
 }
@@ -261,6 +268,23 @@ body{
 }
 .mu-glyph svg{width:30px;height:30px;color:#fff;fill:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
 .mu-cover.paused .mu-glyph{opacity:1}
+/* 歌曲故事：压在封面左下角，自下而上的暗色渐变保证白字可读。
+ * 只在放大页显示 —— 迷你卡片封面才 104px，放不下也没必要。 */
+.mu-story{
+  display:none;position:absolute;left:0;right:0;bottom:0;z-index:2;
+  padding:48px 15px 14px;border-radius:0 0 10px 10px;
+  background:linear-gradient(to top,
+    rgba(0,0,0,.82) 0%,rgba(0,0,0,.66) 40%,rgba(0,0,0,.32) 72%,transparent 100%);
+  pointer-events:none;
+}
+.mu-story-label{
+  font-size:10px;font-weight:600;letter-spacing:.18em;
+  color:rgba(255,255,255,.6);margin-bottom:7px;
+}
+.mu-story-text{font-size:12px;line-height:1.75;color:rgba(255,255,255,.9)}
+.mu-story-text p{margin:0}
+.mu-story-text p+p{margin-top:7px}
+.mu-story-text .q{color:#fff;font-weight:600}
 .mu-meta{margin-top:8px;min-width:0}
 .mu-title{font-size:12.5px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mu-artist{font-size:11px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -274,6 +298,11 @@ body{
 .mu-lyr-inner{padding:40px 2px;display:flex;flex-direction:column;gap:5px}
 .mu-lyr-line{font-size:11.5px;line-height:1.5;color:var(--text-3);transition:color var(--dur-normal) var(--ease-out)}
 .mu-lyr-line.active{color:var(--text-1);font-weight:600}
+/* 同一时间戳的第二行（双语译行、标题下的词曲）：独占一行、更淡、始终不加粗 ——
+ * 用 display:block 而非让父级换行，是避免 .active 的 font-weight:600 被一起继承，
+ * 否则高亮时整句连译文都会变粗，看起来像在喊。 */
+.mu-lyr-sub{display:block;margin-top:1px;font-size:10.5px;font-weight:400;color:var(--text-3)}
+.mu-lyr-line.active .mu-lyr-sub{color:var(--text-2)}
 .mu-lyr-hint{font-size:11.5px;color:var(--text-3);padding:34px 2px;line-height:1.8;text-align:center}
 .mu-lyr-static-hint{padding:0 0 4px;font-size:10px;text-align:left;opacity:.85}
 /* 歌词时间偏移微调：悬停歌词区浮现，用于修正个别音源与 LRC 的时间差 */
@@ -303,6 +332,23 @@ body{
 }
 .mu-offval.changed{color:var(--accent);font-weight:600}
 
+/* 「回到当前」：放大页里手动滚动歌词后浮出，点击恢复自动跟随并跳回当前行 */
+.mu-follow{
+  display:none;position:absolute;left:50%;bottom:12px;z-index:3;
+  align-items:center;gap:5px;padding:5px 12px;border-radius:99px;
+  border:1px solid var(--control-stroke);background:var(--control-fill);
+  color:var(--text-1);font-size:11.5px;font-family:inherit;cursor:pointer;
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:0 3px 12px rgba(0,0,0,.22);
+  opacity:0;pointer-events:none;transform:translateX(-50%) translateY(8px);
+  transition:opacity var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out),
+    background var(--dur-faster) var(--ease-out);
+}
+.mu-follow.show{opacity:1;pointer-events:auto;transform:translateX(-50%)}
+.mu-follow:hover{background:var(--control-fill-hover)}
+.mu-follow:active{transform:translateX(-50%) scale(.96)}
+.mu-follow svg{width:13px;height:13px;fill:currentColor;flex:none}
+
 .mu-ctrl{margin-top:8px;flex:none}
 .mu-progress{display:flex;align-items:center;gap:8px}
 .mu-time{font-size:10px;color:var(--text-3);font-variant-numeric:tabular-nums;flex:none;min-width:26px}
@@ -329,6 +375,79 @@ body{
 .mu-play:hover{background:var(--accent);color:#fff;filter:brightness(1.08)}
 .mu-play svg{width:18px;height:18px}
 .mu-play .ic-play,.mu-play .ic-pause{display:grid;place-items:center}
+
+/* ---------- 放大播放页（Now Playing）：双击迷你卡片从左下角滑出 ----------
+ * 实现方式不是「另做一个面板、把 DOM 搬进去」，而是让 #musicCard 自己换一套
+ * 几何尺寸：同一份 DOM、同一份状态，所以永远不存在「迷你版和放大版对不上」
+ * 的可能，也没有搬运 DOM 时那一瞬间「卡片被掏空」的中间态。
+ * 放大只靠下面这组 .np-mode 作用域覆盖尺寸，迷你卡片的样式一行都不用改。 */
+.np-scrim{
+  position:fixed;inset:0;z-index:75;cursor:pointer;background:var(--np-scrim);
+  -webkit-backdrop-filter:blur(14px) saturate(130%);backdrop-filter:blur(14px) saturate(130%);
+  opacity:0;transition:opacity var(--dur-normal) var(--ease-out);
+}
+.np-scrim.show{opacity:1}
+.side-music.np-mode{
+  /* 锚定左下角，transform-origin 也在左下角 —— scale 出来就是「从左下角滑出」 */
+  position:fixed;left:22px;bottom:22px;z-index:76;transform-origin:0 100%;
+  width:min(920px,calc(100vw - 44px));height:min(510px,calc(100vh - 44px));
+  padding:20px;
+  background:var(--acrylic-strong-tint);
+  -webkit-backdrop-filter:blur(40px) saturate(170%);backdrop-filter:blur(40px) saturate(170%);
+  box-shadow:0 18px 56px rgba(0,0,0,.34);
+  opacity:0;transform:scale(.72) translate(-12px,16px);
+}
+/* 过渡单独挂在 .np-anim 上：加 .np-mode 的那一帧需要「瞬间」落位，
+ * 否则会先播一段从迷你尺寸缩到 .72 的假动画。 */
+.side-music.np-anim{transition:opacity var(--dur-normal) var(--ease-out),transform var(--dur-normal) var(--ease-out)}
+.side-music.np-mode.np-show{opacity:1;transform:none}
+/* 关闭时回到侧栏位置，先把透明度压到 0 再放开 —— 避免「pop」地弹出来 */
+.side-music.np-return{opacity:0}
+
+.mu-close{
+  position:absolute;top:16px;right:16px;z-index:4;
+  width:34px;height:34px;border-radius:50%;padding:0;cursor:pointer;
+  border:1px solid var(--control-stroke);
+  background:var(--control-fill);color:var(--text-2);
+  display:none;place-items:center;
+  transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
+}
+.np-mode .mu-close{display:grid}
+.mu-close svg{width:15px;height:15px;fill:currentColor;display:block}
+.mu-close:hover{background:var(--control-fill-hover);color:var(--text-1);transform:scale(1.06)}
+.mu-close:active{transform:scale(.94)}
+
+/* --- 放大页内的尺寸覆盖（全部限定在 .np-mode 内） --- */
+.np-mode .mu-main{gap:26px}
+.np-mode .mu-left{width:380px}
+/* 封面用 min() 兜底：视口很矮时优先缩封面，避免把歌名挤出可视区 */
+.np-mode .mu-cover{height:min(380px,calc(100vh - 250px));border-radius:10px}
+.np-mode .mu-meta{margin-top:14px}
+.np-mode .mu-title{font-size:20px}
+.np-mode .mu-artist{font-size:13px;margin-top:4px}
+/* 歌词区在这里可以自由滚轮浏览（迷你卡片里是 overflow:hidden）。
+ * 顺带禁掉文字选择 —— 否则「双击关闭」会先选中一个词，留下难看的选区。 */
+.np-mode .mu-lyrics{overflow-y:auto;overscroll-behavior:contain;padding-right:6px;user-select:none;-webkit-user-select:none}
+.np-mode .mu-lyr-inner{padding:200px 4px;gap:9px}
+.np-mode .mu-lyr-line{font-size:15px;line-height:1.55;color:var(--text-2)}
+/* 必须重新声明 active：两条规则特异性相同，后写的会盖掉前面的高亮色 */
+.np-mode .mu-lyr-line.active{color:var(--text-1)}
+.np-mode .mu-lyr-sub{font-size:12.5px;margin-top:3px}
+.np-mode .mu-lyr-hint{font-size:15px}
+.np-mode .mu-lyr-static-hint{font-size:11.5px}
+.np-mode .mu-offset{padding:3px}
+.np-mode .mu-offset button{width:22px;height:22px;font-size:14px}
+.np-mode .mu-offval{font-size:11.5px;min-width:40px}
+.np-mode .mu-ctrl{margin-top:14px}
+.np-mode .mu-time{font-size:12px;min-width:36px}
+.np-mode .mu-seek{height:20px}
+.np-mode .mu-btns{gap:16px;margin-top:10px}
+.np-mode .mu-btn{width:40px;height:40px}
+.np-mode .mu-btn svg{width:22px;height:22px}
+.np-mode .mu-play{width:48px;height:48px}
+.np-mode .mu-play svg{width:24px;height:24px}
+.np-mode .mu-story{display:block}
+.np-mode .mu-follow{display:inline-flex}
 
 .card{border-radius:var(--radius)}
 
@@ -799,12 +918,19 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
       <audio id="muAudio" preload="metadata"></audio>
       <div class="mu-main">
         <div class="mu-left">
-          <button class="mu-cover paused" id="muCover" aria-label="播放或暂停">
-            <img id="muCoverImg" alt="专辑封面">
-            <span class="mu-glyph" aria-hidden="true">
-              <svg viewBox="0 0 20 20"><path d="M6.3 4.9c0-.9.98-1.45 1.74-.98l7.6 4.68a1.15 1.15 0 0 1 0 1.96l-7.6 4.68c-.76.47-1.74-.08-1.74-.98V4.9Z"/></svg>
-            </span>
-          </button>
+          <div class="mu-coverwrap">
+            <button class="mu-cover paused" id="muCover" aria-label="播放或暂停">
+              <img id="muCoverImg" alt="专辑封面">
+              <span class="mu-glyph" aria-hidden="true">
+                <svg viewBox="0 0 20 20"><path d="M6.3 4.9c0-.9.98-1.45 1.74-.98l7.6 4.68a1.15 1.15 0 0 1 0 1.96l-7.6 4.68c-.76.47-1.74-.08-1.74-.98V4.9Z"/></svg>
+              </span>
+            </button>
+            <!-- 歌曲故事：压在封面左下角，仅放大页显示（文案写在 JS 的 STORIES 里） -->
+            <div class="mu-story" id="muStory" aria-hidden="true">
+              <div class="mu-story-label">歌曲故事</div>
+              <div class="mu-story-text" id="muStoryText"></div>
+            </div>
+          </div>
           <div class="mu-meta">
             <div class="mu-title" id="muTitle">—</div>
             <div class="mu-artist" id="muArtist">—</div>
@@ -818,6 +944,11 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
               <span class="mu-offval" id="muOffVal" title="歌词相对音频的时间偏移 · 点击归零">0.0s</span>
               <button type="button" id="muOffPlus" aria-label="歌词延后 0.5 秒" title="歌词延后 0.5 秒">+</button>
             </div>
+            <!-- 放大页里滚轮翻歌词后浮出，点击恢复自动跟随（仅放大页显示） -->
+            <button type="button" class="mu-follow" id="muFollow" aria-label="回到当前播放的歌词">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.2a6.8 6.8 0 1 1-6.8 6.8.9.9 0 1 0-1.8 0A8.6 8.6 0 1 0 10 1.4a8.55 8.55 0 0 0-6.1 2.55V2.2a.9.9 0 1 0-1.8 0v4.1a.9.9 0 0 0 .9.9h4.1a.9.9 0 1 0 0-1.8H4.55A6.78 6.78 0 0 1 10 3.2Z"/></svg>
+              回到当前
+            </button>
           </div>
           <div class="mu-ctrl">
             <div class="mu-progress">
@@ -840,6 +971,10 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
           </div>
         </div>
       </div>
+      <!-- 关闭放大页（仅放大页显示） -->
+      <button class="mu-close" id="muClose" type="button" title="关闭" aria-label="关闭放大播放页">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
+      </button>
     </section>
 
     <!-- 左下角：全站搜索（原预留区域） -->
@@ -865,6 +1000,11 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
       <div id="postList" class="post-list"></div>
     </section>
   </main>
+
+  <!-- 放大播放页的遮罩。放在 .desktop 内部，与 #musicCard 同处一个层叠上下文，
+       否则 .desktop 的 z-index:1 会把外面的遮罩抬到卡片之上、盖住放大页。
+       点它关闭，营造沉浸感。 -->
+  <div class="np-scrim" id="npScrim" hidden></div>
 </div>
 
 <!-- 文章阅读页 -->
@@ -1334,17 +1474,49 @@ el('swatches').addEventListener('click',function(e){
  * 歌词首次切到该曲才 fetch 并缓存。 */
 var PLAYLIST=[
   /* offset：歌词时间偏移（秒），正值=歌词延后。
-   * 两份 LRC 都是整秒时间戳，实测真实人声起音平均晚 0.5s，故补偿 0.5。 */
+   * LRC 都是整秒时间戳，真实人声起音平均比标注晚约 0.5s（截断量化），故默认补 0.5。
+   * 「Nothing's…」用互相关实测 +0.86s（对照实验可复现），故单独给 1.0。
+   * 「黑洞里」鼓点密、互相关会落在节拍旁瓣上给出假峰，改用编曲段落台阶复核：
+   *   全曲两处最大能量跳变（19s / 90s，间隔 71s＝段落周期）正压在副歌起点 19.00 / 90.00，
+   *   桥段加厚压 141.00，0.05s 精度下台阶落在 19.10 而鼓点瞬态在 19.20 → 残差 <0.3s，取 0.5。 */
   {title:'太聪明',artist:'陈绮贞',src:'music/mp3/tai_cong_ming.mp3',cover:'music/covers/tai_cong_ming.webp',lrc:'music/lyrics/tai_cong_ming.lrc',offset:0.5},
   {title:'水星记',artist:'郭顶',src:'music/mp3/shui_xing_ji.mp3',cover:'music/covers/shui_xing_ji.webp',lrc:'music/lyrics/shui_xing_ji.lrc',offset:0.5},
-  {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.txt',offset:0}
+  {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.txt',offset:0},
+  {title:"Nothing's Gonna Change My Love For You",artist:'方大同',src:'music/mp3/nothing_change_my_love.mp3',cover:'music/covers/nothing_change_my_love.jpg',lrc:'music/lyrics/nothing_change_my_love.lrc',offset:1},
+  {title:'黑洞里',artist:'方大同',src:'music/mp3/hei_dong_li.mp3',cover:'music/covers/hei_dong_li.webp',lrc:'music/lyrics/hei_dong_li.lrc',offset:0.5}
 ];
 var muAudio=el('muAudio'),muCover=el('muCover'),muCoverImg=el('muCoverImg'),
     muTitle=el('muTitle'),muArtist=el('muArtist'),muLyrics=el('muLyrics'),
     muSeek=el('muSeek'),muCur=el('muCur'),muDur=el('muDur'),
     muPlay=el('muPlay'),muPrev=el('muPrev'),muNext=el('muNext'),
-    muLyrWrap=el('muLyrWrap'),muOffset=el('muOffset'),muOffVal=el('muOffVal');
-var muIdx=0,muSeeking=false,muLyricCache={},muActiveLine=-1,muLyrInner=null,muRafId=0;
+    muLyrWrap=el('muLyrWrap'),muOffset=el('muOffset'),muOffVal=el('muOffVal'),
+    muMusicCard=el('musicCard'),muClose=el('muClose'),muFollow=el('muFollow'),
+    muStoryText=el('muStoryText'),npScrim=el('npScrim');
+var muIdx=0,muSeeking=false,muLyricCache={},muActiveLine=-1,muLyrInner=null,muRafId=0,
+    npOpen=false,muFollowOn=true,muFollowT=0,npAnimT=0;
+
+/* ---------- 歌曲故事（放大页封面左下角） ----------
+ * 只写可查证的事实，不做演绎。q:true 的那一行是引用/原文，单独加重。 */
+var STORIES=[
+  [ {t:'INFP 就是这样，越想把对方看清，越不敢让自己的真心被看穿。'} ],
+  [ {t:'“还有多远才能进入你的心”……',q:true},
+    {t:'水星是离太阳最近的一颗行星，却无法脱离自己的轨道，再靠近一点。郭顶说：「环游是无趣，至少可以陪着你。」'} ],
+  [ {t:'柔らかい緑色の葉に触れている',q:true},
+    {t:'触碰着柔软的、绿色的叶子。'} ],
+  [ {t:'One thing you can be sure of',q:true},
+    {t:'1985 年班森首唱时它没红，两年后被一个 17 岁少年唱成英国榜冠军。方大同的第一张翻唱专辑把它又捡了回来——有些话不怕说旧，只怕不说。'} ],
+  [ {t:'我的一片地 藏在黑洞里',q:true},
+    {t:'2008 年的《橙月》里，周耀辉写了一个没有引力的私人宇宙：树上长爱情，河水洗回忆。想带你进来，先得让你放下地球人那些无聊的老传奇。'} ]
+];
+function muRenderStory(i){
+  muStoryText.textContent='';
+  (STORIES[i]||[]).forEach(function(r){
+    var p=document.createElement('p');
+    if(r.q)p.className='q';
+    p.textContent=r.t;
+    muStoryText.appendChild(p);
+  });
+}
 
 /* ---------- 歌词时间偏移（秒）：正值表示歌词延后显示 ----------
  * 个别音源与 LRC 存在整体时差，这里按曲目记忆用户微调结果。 */
@@ -1399,7 +1571,20 @@ function parseLRC(text){
     times.forEach(function(t){out.push({t:t,text:txt})});
   });
   out.sort(function(a,b){return a.t-b.t});
-  return out;
+  /* 合并时间戳完全相同的连续行 —— 它们本是同一句的两种写法：
+   * 双语 LRC 的「原文 / 译文」，或标题下挤在 00:00 的「标题 + 词曲」。
+   * 不合并的话，查表只会命中最后一条，前一条连一帧都撑不到就被顶掉（0 毫秒闪过），
+   * 现象是「翻译永远不出现」，很容易被误判成时差。 */
+  var merged=[],last;
+  out.forEach(function(l){
+    last=merged[merged.length-1];
+    if(last&&Math.abs(last.t-l.t)<1e-6){
+      last.sub=last.sub?last.sub+'　'+l.text:l.text;
+    }else{
+      merged.push({t:l.t,text:l.text});
+    }
+  });
+  return merged;
 }
 function muLoadLyrics(i){
   if(muLyricCache[i]!==undefined)return Promise.resolve(muLyricCache[i]);
@@ -1416,7 +1601,10 @@ function muRenderLyrics(data){
   var html='';
   if(!data.timed)html+='<div class="mu-lyr-hint mu-lyr-static-hint">纯文本歌词 · 无时间同步</div>';
   html+=data.lines.map(function(l){
-    return '<div class="mu-lyr-line">'+escHtml(data.timed?l.text:l)+'</div>';
+    if(!data.timed)return '<div class="mu-lyr-line">'+escHtml(l)+'</div>';
+    /* 次行插在同一个 .mu-lyr-line 内，仍是一条歌词 —— 索引与 .active 高亮一一对应 */
+    var sub=l.sub?'<span class="mu-lyr-sub">'+escHtml(l.sub)+'</span>':'';
+    return '<div class="mu-lyr-line">'+escHtml(l.text)+sub+'</div>';
   }).join('');
   muLyrics.innerHTML='<div class="mu-lyr-inner">'+html+'</div>';
   muLyrInner=muLyrics.querySelector('.mu-lyr-inner');
@@ -1438,7 +1626,15 @@ function muSyncLyrics(){
   var line=muLyrInner.children[i];
   if(!line)return;
   line.classList.add('active');
-  muLyrics.scrollTo({top:line.offsetTop-(muLyrics.clientHeight-line.offsetHeight)/2,behavior:'smooth'});
+  /* 放大页里手动滚过歌词后不把用户拽回当前行，只继续更新高亮 */
+  if(muFollowOn)muScrollToActive(true);
+}
+/* 把当前高亮行滚到歌词区正中 */
+function muScrollToActive(smooth){
+  var line=muLyrInner&&muLyrInner.children[muActiveLine];
+  if(!line)return;
+  muLyrics.scrollTo({top:line.offsetTop-(muLyrics.clientHeight-line.offsetHeight)/2,
+    behavior:smooth?'smooth':'auto'});
 }
 /* 播放期间用 rAF 逐帧同步：timeupdate 只有 ~4Hz，最多会慢 250ms，逐帧更跟手 */
 function muSyncTick(){
@@ -1460,11 +1656,15 @@ function muLoadTrack(i,keepPlaying){
   muCoverImg.src=assetUrl(t.cover);
   muTitle.textContent=t.title;muTitle.title=t.title+' - '+t.artist;
   muArtist.textContent=t.artist;muArtist.title=t.title+' - '+t.artist;
+  muRenderStory(muIdx);
   muSeek.value=0;muSeek.style.setProperty('--fill','0%');
   muCur.textContent='0:00';muDur.textContent='0:00';
   muLyrics.innerHTML='<div class="mu-lyr-hint">歌词加载中…</div>';
   muLyrInner=null;muActiveLine=-1;
   if(muLyrWrap)muLyrWrap.classList.remove('timed','hover-lock');
+  /* 换曲后重新跟随当前行 */
+  muFollowOn=true;clearTimeout(muFollowT);
+  if(muFollow)muFollow.classList.remove('show');
   muLoadLyrics(muIdx).then(function(data){if(muIdx===reqIdx)muRenderLyrics(data)});
   /* 系统级媒体控制（Win11 媒体浮层可显示封面/标题并遥控） */
   if('mediaSession' in navigator){
@@ -1519,6 +1719,84 @@ window.addEventListener('pointerup',function(){setTimeout(function(){muSeeking=f
 window.addEventListener('blur',function(){muSeeking=false});
 /* 初始装载第一首（音频仅 metadata，封面+歌词轻量加载） */
 muLoadTrack(0,false);
+
+/* ================= 放大播放页（Now Playing） =================
+ * 双击迷你卡片打开 / 在放大页上再双击一次关闭。
+ * #musicCard 自己加 .np-mode 就变成放大页（几何尺寸全在 CSS 里覆盖），
+ * 不搬运 DOM —— 所以迷你版和放大版永远是同一份节点、同一份状态。 */
+function openNP(){
+  if(npOpen)return;
+  npOpen=true;
+  /* 关闭动画可能还没收尾：先清干净，否则带 .np-anim 加 .np-mode 会把
+   * 「瞬间落位」变成一段看得见的缩放动画 */
+  clearTimeout(npAnimT);
+  muMusicCard.classList.remove('np-anim','np-return');
+  /* 重新跟随当前行（歌词区变高了要重新居中） */
+  muFollowOn=true;clearTimeout(muFollowT);
+  if(muFollow)muFollow.classList.remove('show');
+  muMusicCard.classList.add('np-mode');
+  /* 放大后它就是一个模态面板，语义上要对得上 */
+  muMusicCard.setAttribute('role','dialog');
+  muMusicCard.setAttribute('aria-modal','true');
+  muMusicCard.setAttribute('aria-label','正在播放');
+  void muMusicCard.offsetWidth;   /* 让新几何尺寸先落位，避免多播一段从迷你尺寸缩下去的假动画 */
+  muScrollToActive(false);
+  npScrim.hidden=false;
+  requestAnimationFrame(function(){
+    muMusicCard.classList.add('np-anim','np-show');
+    npScrim.classList.add('show');
+  });
+}
+function closeNP(){
+  if(!npOpen)return;
+  npOpen=false;
+  muMusicCard.classList.remove('np-show');
+  npScrim.classList.remove('show');
+  clearTimeout(muFollowT);
+  muFollowOn=true;
+  if(muFollow)muFollow.classList.remove('show');
+  muMusicCard.setAttribute('role','region');
+  muMusicCard.removeAttribute('aria-modal');
+  muMusicCard.setAttribute('aria-label','音乐播放器');
+  clearTimeout(npAnimT);
+  npAnimT=setTimeout(function(){
+    if(npOpen)return;             /* 淡出期间又打开了，别把状态清掉 */
+    /* 摘掉 .np-mode 会瞬间回到侧栏位置：先压成不可见，再放开让它淡入，
+     * 否则会「pop」地弹出来（侧栏重排 + 内容突然出现）。 */
+    muMusicCard.classList.remove('np-anim','np-mode');
+    muMusicCard.classList.add('np-return');
+    void muMusicCard.offsetWidth;
+    muMusicCard.classList.add('np-anim');
+    muMusicCard.classList.remove('np-return');
+    npScrim.hidden=true;
+    setTimeout(function(){muMusicCard.classList.remove('np-anim')},220);
+  },260);
+}
+/* 歌词手动浏览：暂停自动居中并浮出「回到当前」，8 秒没再滚动就自动恢复 */
+function pauseFollow(){
+  if(!npOpen)return;
+  muFollowOn=false;
+  if(muFollow)muFollow.classList.add('show');
+  clearTimeout(muFollowT);
+  muFollowT=setTimeout(resumeFollow,8000);
+}
+function resumeFollow(){
+  muFollowOn=true;
+  if(muFollow)muFollow.classList.remove('show');
+  clearTimeout(muFollowT);
+  muScrollToActive(true);
+}
+muLyrics.addEventListener('wheel',pauseFollow,{passive:true});
+muLyrics.addEventListener('pointerdown',pauseFollow);
+muLyrics.addEventListener('touchstart',pauseFollow,{passive:true});
+if(muFollow)muFollow.addEventListener('click',resumeFollow);
+muClose.addEventListener('click',closeNP);
+npScrim.addEventListener('click',closeNP);
+/* 双击卡片任意空白处 / 歌词区切换；控制区与各类按钮不参与，避免误触 */
+muMusicCard.addEventListener('dblclick',function(e){
+  if(e.target.closest('.mu-ctrl, button, input, a'))return;
+  if(npOpen)closeNP();else openNP();
+});
 
 /* ================= 全站搜索（左下角） ================= */
 var searchPanel=el('searchPanel'),searchInput=el('searchInput'),
@@ -1768,6 +2046,7 @@ document.addEventListener('keydown',function(e){
     if(!readerLayer.hidden)goHome();
     else if(!nfLayer.hidden)goHome();
     else if(!pvLayer.hidden)goHome();
+    else if(npOpen)closeNP();
     else if(!searchPanel.hidden)closeSearch();
     else if(!flyout.hidden)closeFlyout();
   }
