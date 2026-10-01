@@ -44,7 +44,15 @@ html[data-theme="light"]{
   --text-3:rgba(0,0,0,.45);
   --acrylic-bg:rgba(249,249,249,.66);
   --acrylic-strong-bg:rgba(252,252,252,.9);
-  --card-border:rgba(255,255,255,.55);
+  /* 面内描边：画在浅色卡片/面板内部，必须用对比色（暗），白色等于没有 */
+  --card-border:rgba(0,0,0,.07);
+  /* 卡片外轮廓：浮在壁纸上的那一圈，浅色下留白边以脱离暗背景 */
+  --card-edge:rgba(255,255,255,.45);
+  /* 控制面：按钮 / 键帽 / 输入框（不随卡片材质变化） */
+  --control-fill:rgba(255,255,255,.72);
+  --control-fill-hover:rgba(255,255,255,.94);
+  --control-stroke:rgba(0,0,0,.09);
+  --control-stroke-strong:rgba(0,0,0,.18);
   --solid:#f2f2f2;
   --solid-strong:#fafafa;
   --seg-bg:rgba(0,0,0,.055);
@@ -68,17 +76,27 @@ html[data-theme="dark"]{
   --text-3:rgba(255,255,255,.48);
   --acrylic-bg:rgba(36,36,36,.62);
   --acrylic-strong-bg:rgba(30,30,30,.88);
-  --card-border:rgba(255,255,255,.09);
+  /* 面内描边：深色下用亮色，画在深色面板上才看得见 */
+  --card-border:rgba(255,255,255,.10);
+  /* 卡片外轮廓 */
+  --card-edge:rgba(255,255,255,.13);
+  /* 控制面：按钮 / 键帽 / 输入框 */
+  --control-fill:rgba(255,255,255,.07);
+  --control-fill-hover:rgba(255,255,255,.13);
+  --control-stroke:rgba(255,255,255,.10);
+  --control-stroke-strong:rgba(255,255,255,.21);
   --solid:#242424;
   --solid-strong:#2b2b2b;
   --seg-bg:rgba(255,255,255,.07);
-  --seg-active:#3d3d3d;
+  --seg-active:#4a4a4a;
   --hover-tint:rgba(255,255,255,.06);
   --reveal:rgba(255,255,255,.14);
   --chip-fallback:rgba(0,120,212,.25);
   /* 主题色影响材质：深色下用深灰基底 + 主题色微染 */
-  --acrylic-tint:color-mix(in srgb,var(--accent) 13%,rgba(30,30,30,.7));
-  --acrylic-strong-tint:color-mix(in srgb,var(--accent) 15%,rgba(28,28,28,.9));
+  /* 深色卡片原本只有 ~0.74 不透明度，落在同色系壁纸上会糊成一片；
+   * 提到 ~0.84，保留材质感的同时把正文/标签从背景里拉出来 */
+  --acrylic-tint:color-mix(in srgb,var(--accent) 12%,rgba(30,30,30,.82));
+  --acrylic-strong-tint:color-mix(in srgb,var(--accent) 14%,rgba(28,28,28,.91));
   --tint-text:color-mix(in srgb,var(--accent) 55%,#ffffff);
   /* 阅读页 Aero 毛玻璃（固定，不随透明开关变化） */
   --reader-glass:color-mix(in srgb,var(--accent) 7%,rgba(20,20,20,.3));
@@ -86,7 +104,13 @@ html[data-theme="dark"]{
   /* 玻璃很透时，用一层 opacity 衬底保证文字可读性 */
   --reader-scrim:rgba(0,0,0,.32);
 }
+/* 透明效果关闭：卡片必须真正变成实色。
+ * 注意 .acrylic / .acrylic-strong 的 background 用的是 *-tint 变量，
+ * 只把 *-bg 换成实色是空操作（那是 .mu-offset 专用的），会导致
+ * 「关掉透明后卡片仍是半透明、只是丢了模糊」——反而更难读。 */
 html[data-transparency="off"]{
+  --acrylic-tint:var(--solid);
+  --acrylic-strong-tint:var(--solid-strong);
   --acrylic-bg:var(--solid);
   --acrylic-strong-bg:var(--solid-strong);
 }
@@ -129,14 +153,14 @@ body{
   background:var(--acrylic-tint);
   -webkit-backdrop-filter:blur(30px) saturate(160%);
   backdrop-filter:blur(30px) saturate(160%);
-  border:1px solid var(--card-border);
+  border:1px solid var(--card-edge);
   box-shadow:0 2px 10px rgba(0,0,0,.10);
 }
 .acrylic-strong{
   background:var(--acrylic-strong-tint);
   -webkit-backdrop-filter:blur(40px) saturate(170%);
   backdrop-filter:blur(40px) saturate(170%);
-  border:1px solid var(--card-border);
+  border:1px solid var(--card-edge);
   box-shadow:0 8px 32px rgba(0,0,0,.22);
 }
 /* Reveal：Fluent 风格的高光跟随（点对点移动曲线 + 快速时长）。
@@ -180,7 +204,17 @@ body{
 .search-pill:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.2)}
 .search-pill:active{transform:scale(.98)}
 .sp-label{font-size:14px;color:var(--text-2)}
-.sp-kbd{margin-left:auto;font-size:11px;color:var(--text-3);border:1px solid var(--card-border);border-radius:4px;padding:2px 7px}
+/* 键帽：原来只有一圈极淡的描边，深色下几乎消失；改成实底 + 上下不同色的描边，
+ * 下边线更重以模拟键帽厚度 */
+.sp-kbd{
+  margin-left:auto;flex:none;
+  font-size:10.5px;line-height:1;letter-spacing:.3px;
+  color:var(--text-2);
+  background:var(--control-fill);
+  border:1px solid var(--control-stroke);
+  border-bottom-color:var(--control-stroke-strong);
+  border-radius:5px;padding:4px 7px;
+}
 .search-panel{
   position:absolute;left:0;right:0;bottom:58px;z-index:66;
   border-radius:var(--radius);overflow:hidden;
@@ -207,8 +241,11 @@ body{
 
 /* ---------- 迷你音乐播放器（左下角，仅桌面端） ----------
  * 三板块：左侧封面（点击播放/暂停）｜右上歌词（LRC 同步滚动）｜右下控制区 */
-.side-music{flex:none;padding:12px}
-.mu-main{display:flex;gap:12px}
+/* 侧栏纵向节奏：头像/GitHub 贴顶，播放器吸收全部剩余高度，搜索贴底。
+ * 原本播放器是 flex:none，下方会留下约 380px 空洞再把搜索推到最底，
+ * 三段割裂；现在留白由播放器吃掉，歌词区跟着变高。 */
+.side-music{flex:1 1 auto;min-height:0;padding:12px;display:flex;flex-direction:column}
+.mu-main{display:flex;gap:12px;flex:1;min-height:0}
 .mu-left{width:104px;flex:none;display:flex;flex-direction:column;justify-content:space-between}
 .mu-cover{
   position:relative;width:104px;height:104px;border:none;padding:0;cursor:pointer;
@@ -228,9 +265,9 @@ body{
 .mu-title{font-size:12.5px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mu-artist{font-size:11px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.mu-right{flex:1;min-width:0;display:flex;flex-direction:column}
+.mu-right{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
 .mu-lyrics{
-  height:104px;overflow:hidden;position:relative;
+  height:100%;overflow:hidden;position:relative;
   -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 82%,transparent 100%);
   mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 82%,transparent 100%);
 }
@@ -240,7 +277,7 @@ body{
 .mu-lyr-hint{font-size:11.5px;color:var(--text-3);padding:34px 2px;line-height:1.8;text-align:center}
 .mu-lyr-static-hint{padding:0 0 4px;font-size:10px;text-align:left;opacity:.85}
 /* 歌词时间偏移微调：悬停歌词区浮现，用于修正个别音源与 LRC 的时间差 */
-.mu-lyr-wrap{position:relative;flex:none}
+.mu-lyr-wrap{position:relative;flex:1;min-height:0}
 .mu-offset{
   position:absolute;top:0;right:0;z-index:2;align-items:center;gap:1px;
   padding:1px;border-radius:var(--radius);display:none;
@@ -266,7 +303,7 @@ body{
 }
 .mu-offval.changed{color:var(--accent);font-weight:600}
 
-.mu-ctrl{margin-top:8px}
+.mu-ctrl{margin-top:8px;flex:none}
 .mu-progress{display:flex;align-items:center;gap:8px}
 .mu-time{font-size:10px;color:var(--text-3);font-variant-numeric:tabular-nums;flex:none;min-width:26px}
 .mu-time:last-child{text-align:right}
@@ -326,15 +363,22 @@ html[data-theme="dark"] .avatar{border-color:rgba(255,255,255,.25)}
 @keyframes viewIn{from{opacity:0;transform:translateY(12px)}}
 
 /* ---------- 博客文章流 ---------- */
-.post-list{display:flex;flex-direction:column;gap:14px;max-width:880px}
-.post{padding:18px 22px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out)}
+.post-list{display:flex;flex-direction:column;gap:14px;max-width:800px}
+/* 文章卡用更实的材质，与侧栏导航卡拉开层级：
+ * 原本两者都是 .card.acrylic，圆角/边框/阴影完全一样，分不出谁是内容谁是导航 */
+.post{
+  padding:18px 22px;cursor:pointer;
+  background:var(--acrylic-strong-tint);
+  transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);
+}
 .post:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.2)}
 .post-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .chip{
   padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:500;
   background:var(--chip-fallback);
-  background:color-mix(in srgb,var(--accent) 14%,transparent);
-  color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 16%,transparent);
+  /* 深色主题下 accent 本身偏暗，直接当文字色会糊在卡片里；用混过白的 tint-text */
+  color:var(--tint-text);
 }
 .post-meta time{margin-left:auto;font-size:12px;color:var(--text-3)}
 .post-title{margin:10px 0 6px;font-size:17px;font-weight:600;line-height:1.4;transition:color var(--dur-fast) var(--ease-out)}
@@ -568,16 +612,19 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 .flyout-head{font-size:15px;font-weight:600;margin-bottom:14px}
 .group{margin-bottom:14px}
 .group-title{font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:8px}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.row .group-title{margin-bottom:0}
+/* 注：原 .row 与 .group.row 已由 .switch-row 取代（整行可点 + 行级 hover） */
 
 /* 壁纸选择：一条横向滚动带（桌面/移动一致），不再多行堆叠挤占空间 */
 .bg-picker{
   display:flex;flex-wrap:nowrap;gap:12px;overflow-x:auto;
-  padding:8px 8px 14px;margin:0 -2px;border-radius:8px;
+  padding:8px 14px 14px;margin:0 -2px;border-radius:8px;
   background:var(--seg-bg);
+  border:1px solid var(--card-border);
   scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.5) transparent;
   scroll-snap-type:x proximity;
+  /* 两端渐隐：提示「左右还有内容」。原来的第三张缩略图是被硬裁掉的，看着像 bug */
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);
 }
 .bg-picker::-webkit-scrollbar{height:8px}
 .bg-thumb{background:none;border:none;cursor:pointer;padding:0;flex:none;scroll-snap-align:start}
@@ -586,42 +633,90 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);transition:border-color .2s,box-shadow .2s;
   display:block;
 }
-.bg-thumb.active .thumb{border-color:var(--accent)}
+.bg-thumb.active .thumb{
+  border-color:var(--accent);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent);
+}
 
-/* 默认圆角按钮（Win11 标准按钮样式） */
-.theme-btns{display:flex;gap:8px}
+/* 颜色模式：Win11 分段控件（容器 + 滑动指示块）。
+ * 原本是两个独立按钮，未选中态只有约 5% 的灰底 + 一圈看不见的描边，
+ * 观感接近「禁用」而不是「可选」。改成滑块后，选中位置自带动画。 */
+.theme-btns{
+  position:relative;display:flex;padding:2px;
+  border-radius:var(--radius);
+  background:var(--seg-bg);
+  border:1px solid var(--card-border);
+}
+.seg-thumb{
+  position:absolute;top:2px;left:2px;bottom:2px;width:calc(50% - 2px);
+  border-radius:calc(var(--radius) - 2px);
+  background:var(--seg-active);
+  box-shadow:0 1px 3px rgba(0,0,0,.16),0 0 0 1px var(--control-stroke);
+  transition:transform var(--dur-fast) var(--ease-ptp);
+}
+.theme-btns[data-active="1"] .seg-thumb{transform:translateX(100%)}
 .theme-btns button{
-  flex:1;padding:7px 0;border-radius:var(--radius);
-  border:1px solid var(--card-border);background:var(--seg-bg);
+  position:relative;z-index:1;flex:1;
+  padding:6px 0;border:none;background:none;
   color:var(--text-2);cursor:pointer;font-size:13px;font-family:inherit;
-  transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);
+  border-radius:calc(var(--radius) - 2px);
+  transition:color var(--dur-fast) var(--ease-out);
 }
-.theme-btns button:hover{background:var(--hover-tint);color:var(--text-1)}
-.theme-btns button:active{transform:scale(.97)}
-.theme-btns button.active{
-  background:var(--accent);border-color:transparent;color:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.22);
-}
+.theme-btns button:not(.active):hover{color:var(--text-1)}
+.theme-btns button.active{color:var(--text-1);font-weight:600}
 
-.swatches{display:flex;gap:10px;flex-wrap:wrap}
-.swatch{width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:outline-color var(--dur-faster) var(--ease-out),transform var(--dur-faster) var(--ease-out)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;padding:4px}
+.swatch{
+  position:relative;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
+  padding:0;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.14);
+  outline:2px solid transparent;outline-offset:2px;
+  transition:outline-color var(--dur-faster) var(--ease-out),transform var(--dur-faster) var(--ease-out);
+}
 .swatch:hover{transform:scale(1.12)}
-.swatch.active{outline-color:var(--text-3)}
-.swatch.active::after{content:"✓";color:#fff;font-size:13px;display:block;text-align:center;line-height:28px}
+/* 选中：文字色圆环 + 按色板亮度自动取黑/白勾。
+ * 原本固定用白勾，在青/橙/绿这类亮色板上前景对比度不足。 */
+.swatch.active{outline-color:var(--text-2)}
+.swatch.active::after{content:"✓";color:var(--ink,#fff);font-size:14px;line-height:1}
 
+/* 开关：整行可点（原热区只有 40×20），并带行级 hover 反馈。
+ * 关闭态原来是不透明度固定的灰底 + 白点，浅色下几乎看不见底，
+ * 现在用控制面填充 + 描边，圆点跟随文字色，深浅主题下都成立。 */
+.switch-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 10px;margin:2px -10px 6px;border-radius:6px;cursor:pointer;
+  transition:background var(--dur-faster) var(--ease-out);
+}
+.switch-row:hover{background:var(--hover-tint)}
+.switch-row:active{background:var(--control-fill)}
+.switch-label{font-size:12.5px;font-weight:600;color:var(--text-2)}
 .switch{position:relative;display:inline-block;width:40px;height:20px;flex:none}
 .switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;border-radius:99px;background:rgba(128,128,128,.4);transition:background var(--dur-fast) var(--ease-out);cursor:pointer}
-.slider::before{
-  content:"";position:absolute;left:4px;top:4px;width:12px;height:12px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform var(--dur-fast) var(--ease-out);
+.slider{
+  position:absolute;inset:0;border-radius:99px;cursor:pointer;
+  background:var(--control-fill);
+  border:1px solid var(--control-stroke-strong);
+  transition:background var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out);
 }
-.switch input:checked + .slider{background:var(--accent)}
-.switch input:checked + .slider::before{transform:translateX(20px)}
+.slider::before{
+  content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;
+  background:var(--text-2);
+  transition:transform var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);
+}
+.switch input:checked + .slider{background:var(--accent);border-color:transparent}
+.switch input:checked + .slider::before{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transform:translateX(20px)}
 
 .flyout-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:12px;border-top:1px solid var(--card-border)}
-.link-btn{border:none;background:none;color:var(--accent);font-size:12.5px;cursor:pointer;padding:4px 6px;border-radius:4px;font-family:inherit}
-.link-btn:hover{background:var(--hover-tint)}
+/* 恢复默认：原本只是一行 accent 色文字，和正文没有区别；
+ * 改成 Win11 次要按钮，明确「这是一个可点的操作」 */
+.link-btn{
+  border:1px solid var(--control-stroke);background:var(--control-fill);
+  color:var(--text-1);font-size:12.5px;font-family:inherit;
+  cursor:pointer;padding:6px 14px;border-radius:var(--radius);
+  transition:background var(--dur-faster) var(--ease-out),transform var(--dur-fast) var(--ease-out);
+}
+.link-btn:hover{background:var(--control-fill-hover)}
+.link-btn:active{transform:scale(.97)}
 
 /* ---------- Toast ---------- */
 .toast{
@@ -857,7 +952,8 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 
   <div class="group">
     <div class="group-title">颜色模式</div>
-    <div class="theme-btns" id="themeSeg">
+    <div class="theme-btns" id="themeSeg" data-active="0">
+      <span class="seg-thumb" aria-hidden="true"></span>
       <button type="button" data-theme-set="light">浅色</button>
       <button type="button" data-theme-set="dark">深色</button>
     </div>
@@ -868,19 +964,15 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
     <div class="swatches" id="swatches"></div>
   </div>
 
-  <div class="group row">
-    <div>
-      <div class="group-title">透明效果</div>
-    </div>
-    <label class="switch"><input type="checkbox" id="transparencyToggle" checked><span class="slider"></span></label>
-  </div>
+  <label class="switch-row">
+    <span class="switch-label">透明效果</span>
+    <span class="switch"><input type="checkbox" id="transparencyToggle" checked><span class="slider"></span></span>
+  </label>
 
-  <div class="group row">
-    <div>
-      <div class="group-title">圆角样式</div>
-    </div>
-    <label class="switch"><input type="checkbox" id="cornerToggle" checked><span class="slider"></span></label>
-  </div>
+  <label class="switch-row">
+    <span class="switch-label">圆角样式</span>
+    <span class="switch"><input type="checkbox" id="cornerToggle" checked><span class="slider"></span></span>
+  </label>
 
   <div class="flyout-foot">
     <button class="link-btn" id="resetBtn">恢复默认</button>
@@ -1027,6 +1119,7 @@ function applySettings(instant){
 
   document.querySelectorAll('.bg-thumb').forEach(function(b){b.classList.toggle('active',b.dataset.bg===settings.bg)});
   document.querySelectorAll('#themeSeg button').forEach(function(b){b.classList.toggle('active',b.dataset.themeSet===settings.theme)});
+  el('themeSeg').dataset.active=settings.theme==='dark'?'1':'0'; /* 驱动滑动指示块 */
   document.querySelectorAll('.swatch').forEach(function(s){s.classList.toggle('active',s.dataset.accent===settings.accent)});
   el('transparencyToggle').checked=settings.transparency==='on';
   el('cornerToggle').checked=settings.corner==='round';
@@ -1217,9 +1310,19 @@ el('resetBtn').addEventListener('click',function(){
   settings=Object.assign({},DEFAULTS);saveSettings();applySettings();toast('已恢复默认设置');
 });
 
-/* 主题色 swatch 生成 */
+/* 主题色 swatch 生成。
+ * --ink 是按色板 sRGB 相对亮度算出的勾选色：白勾落在青色 (#00B7C3) 这类
+ * 亮色板上对比度只有 2.4:1，阈值 0.35 正好把它挑出来改用黑勾。 */
+function swatchInk(hex){
+  var m=/^#?([0-9a-f]{6})$/i.exec(hex);
+  if(!m)return '#fff';
+  var v=parseInt(m[1],16),c=[(v>>16)&255,(v>>8)&255,v&255].map(function(x){
+    x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);
+  });
+  return (0.2126*c[0]+0.7152*c[1]+0.0722*c[2])>0.35?'#000':'#fff';
+}
 el('swatches').innerHTML=ACCENTS.map(function(c){
-  return '<button class="swatch" data-accent="'+c+'" style="background:'+c+'" aria-label="主题色 '+c+'"></button>';
+  return '<button class="swatch" data-accent="'+c+'" style="background:'+c+';--ink:'+swatchInk(c)+'" aria-label="主题色 '+c+'"></button>';
 }).join('');
 el('swatches').addEventListener('click',function(e){
   var s=e.target.closest('.swatch');if(s)setSetting('accent',s.dataset.accent);
