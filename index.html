@@ -239,6 +239,32 @@ body{
 .mu-lyr-line.active{color:var(--text-1);font-weight:600}
 .mu-lyr-hint{font-size:11.5px;color:var(--text-3);padding:34px 2px;line-height:1.8;text-align:center}
 .mu-lyr-static-hint{padding:0 0 4px;font-size:10px;text-align:left;opacity:.85}
+/* 歌词时间偏移微调：悬停歌词区浮现，用于修正个别音源与 LRC 的时间差 */
+.mu-lyr-wrap{position:relative;flex:none}
+.mu-offset{
+  position:absolute;top:0;right:0;z-index:2;align-items:center;gap:1px;
+  padding:1px;border-radius:var(--radius);display:none;
+  background:var(--acrylic-strong-bg);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--card-border);box-shadow:0 2px 8px rgba(0,0,0,.14);
+  opacity:0;transform:translateY(-3px);pointer-events:none;
+  transition:opacity var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
+}
+.mu-lyr-wrap.timed .mu-offset{display:flex}
+.mu-lyr-wrap:hover .mu-offset,.mu-offset:focus-within,.mu-lyr-wrap.hover-lock .mu-offset{opacity:1;transform:none;pointer-events:auto}
+.mu-offset button{
+  width:17px;height:17px;padding:0;border:none;border-radius:4px;background:none;color:var(--text-2);
+  font-size:12px;line-height:1;cursor:pointer;display:grid;place-items:center;
+  transition:background var(--dur-faster) var(--ease-out),color var(--dur-faster) var(--ease-out);
+}
+.mu-offset button:hover{background:var(--hover-tint);color:var(--text-1)}
+.mu-offset button:active{transform:scale(.9)}
+.mu-offval{
+  min-width:32px;text-align:center;font-size:10px;color:var(--text-3);
+  font-variant-numeric:tabular-nums;cursor:pointer;user-select:none;
+  transition:color var(--dur-fast) var(--ease-out);
+}
+.mu-offval.changed{color:var(--accent);font-weight:600}
 
 .mu-ctrl{margin-top:8px}
 .mu-progress{display:flex;align-items:center;gap:8px}
@@ -690,7 +716,14 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
           </div>
         </div>
         <div class="mu-right">
-          <div class="mu-lyrics" id="muLyrics"><div class="mu-lyr-hint">点播放键开始<br>歌词将在此同步滚动</div></div>
+          <div class="mu-lyr-wrap" id="muLyrWrap">
+            <div class="mu-lyrics" id="muLyrics"><div class="mu-lyr-hint">点播放键开始<br>歌词将在此同步滚动</div></div>
+            <div class="mu-offset" id="muOffset" role="group" aria-label="歌词时间偏移微调">
+              <button type="button" id="muOffMinus" aria-label="歌词提前 0.5 秒" title="歌词提前 0.5 秒">−</button>
+              <span class="mu-offval" id="muOffVal" title="歌词相对音频的时间偏移 · 点击归零">0.0s</span>
+              <button type="button" id="muOffPlus" aria-label="歌词延后 0.5 秒" title="歌词延后 0.5 秒">+</button>
+            </div>
+          </div>
           <div class="mu-ctrl">
             <div class="mu-progress">
               <span class="mu-time" id="muCur">0:00</span>
@@ -1197,15 +1230,50 @@ el('swatches').addEventListener('click',function(e){
  * 懒加载策略：音频 preload=metadata（不整首下载），封面仅当前曲目，
  * 歌词首次切到该曲才 fetch 并缓存。 */
 var PLAYLIST=[
-  {title:'太聪明',artist:'陈绮贞',src:'music/mp3/tai_cong_ming.mp3',cover:'music/covers/tai_cong_ming.webp',lrc:'music/lyrics/tai_cong_ming.lrc'},
-  {title:'水星记',artist:'郭顶',src:'music/mp3/shui_xing_ji.mp3',cover:'music/covers/shui_xing_ji.webp',lrc:'music/lyrics/shui_xing_ji.lrc'},
-  {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.txt'}
+  /* offset：歌词时间偏移（秒），正值=歌词延后。
+   * 两份 LRC 都是整秒时间戳，实测真实人声起音平均晚 0.5s，故补偿 0.5。 */
+  {title:'太聪明',artist:'陈绮贞',src:'music/mp3/tai_cong_ming.mp3',cover:'music/covers/tai_cong_ming.webp',lrc:'music/lyrics/tai_cong_ming.lrc',offset:0.5},
+  {title:'水星记',artist:'郭顶',src:'music/mp3/shui_xing_ji.mp3',cover:'music/covers/shui_xing_ji.webp',lrc:'music/lyrics/shui_xing_ji.lrc',offset:0.5},
+  {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.txt',offset:0}
 ];
 var muAudio=el('muAudio'),muCover=el('muCover'),muCoverImg=el('muCoverImg'),
     muTitle=el('muTitle'),muArtist=el('muArtist'),muLyrics=el('muLyrics'),
     muSeek=el('muSeek'),muCur=el('muCur'),muDur=el('muDur'),
-    muPlay=el('muPlay'),muPrev=el('muPrev'),muNext=el('muNext');
-var muIdx=0,muSeeking=false,muLyricCache={},muActiveLine=-1;
+    muPlay=el('muPlay'),muPrev=el('muPrev'),muNext=el('muNext'),
+    muLyrWrap=el('muLyrWrap'),muOffset=el('muOffset'),muOffVal=el('muOffVal');
+var muIdx=0,muSeeking=false,muLyricCache={},muActiveLine=-1,muLyrInner=null,muRafId=0;
+
+/* ---------- 歌词时间偏移（秒）：正值表示歌词延后显示 ----------
+ * 个别音源与 LRC 存在整体时差，这里按曲目记忆用户微调结果。 */
+var MU_OFF_KEY='mydesk-music-offset';
+var muOffMap=(function(){try{return JSON.parse(localStorage.getItem(MU_OFF_KEY))||{}}catch(e){return{}}})();
+var muOffHideT=0;
+function muOffsetOf(i){
+  var v=muOffMap[i];
+  return typeof v==='number'&&isFinite(v)?v:(PLAYLIST[i].offset||0);
+}
+function muOffsetPaint(v){
+  muOffVal.textContent=(v>0?'+':'')+v.toFixed(1)+'s';
+  muOffVal.classList.toggle('changed',Math.abs(v)>0.001);
+}
+function muOffsetSet(i,v){
+  v=Math.round(v*20)/20;
+  if(v>30)v=30;if(v<-30)v=-30;
+  if(Math.abs(v)<0.001)delete muOffMap[i];else muOffMap[i]=v;
+  try{localStorage.setItem(MU_OFF_KEY,JSON.stringify(muOffMap))}catch(e){}
+  muOffsetPaint(v);
+  muActiveLine=-2; /* 强制重算高亮行 */
+  muSyncLyrics();
+  /* 微调后短暂锁住浮层，方便连续点击 */
+  if(muLyrWrap){muLyrWrap.classList.add('hover-lock');clearTimeout(muOffHideT);
+    muOffHideT=setTimeout(function(){muLyrWrap.classList.remove('hover-lock')},1600);}
+}
+function muOffsetRender(){muOffsetPaint(muOffsetOf(muIdx))}
+if(muOffset){
+  el('muOffMinus').addEventListener('click',function(){muOffsetSet(muIdx,muOffsetOf(muIdx)-0.5)});
+  el('muOffPlus').addEventListener('click',function(){muOffsetSet(muIdx,muOffsetOf(muIdx)+0.5)});
+  muOffVal.addEventListener('click',function(){muOffsetSet(muIdx,0)});
+}
 
 function muFmt(s){
   if(!isFinite(s))return'0:00';
@@ -1233,6 +1301,8 @@ function muLoadLyrics(i){
   }).catch(function(){muLyricCache[i]={timed:false,lines:[]};return muLyricCache[i]});
 }
 function muRenderLyrics(data){
+  muActiveLine=-1;muLyrInner=null;
+  if(muLyrWrap)muLyrWrap.classList.toggle('timed',!!(data&&data.timed));
   if(!data||!data.lines.length){muLyrics.innerHTML='<div class="mu-lyr-hint">暂无歌词</div>';return;}
   var html='';
   if(!data.timed)html+='<div class="mu-lyr-hint mu-lyr-static-hint">纯文本歌词 · 无时间同步</div>';
@@ -1240,27 +1310,34 @@ function muRenderLyrics(data){
     return '<div class="mu-lyr-line">'+escHtml(data.timed?l.text:l)+'</div>';
   }).join('');
   muLyrics.innerHTML='<div class="mu-lyr-inner">'+html+'</div>';
-  muActiveLine=-1;
+  muLyrInner=muLyrics.querySelector('.mu-lyr-inner');
   muLyrics.scrollTop=0;
+  muOffsetRender();
+  muSyncLyrics();
 }
+/* 同步高亮：取「最后一句已经开始」的歌词行。
+ * 注意偏移量 —— 正值表示歌词应延后，故查询时间要往前回溯 offset 秒。 */
 function muSyncLyrics(){
   var data=muLyricCache[muIdx];
-  if(!data||!data.timed)return;
-  var t=muAudio.currentTime,i=data.lines.length-1;
+  if(!data||!data.timed||!muLyrInner)return;
+  var t=muAudio.currentTime-muOffsetOf(muIdx),n=data.lines.length,i=n-1;
   while(i>=0&&data.lines[i].t>t)i--;
-  i++;
-  if(i>=data.lines.length)i=data.lines.length-1;
-  if(i!==muActiveLine){
-    var inner=muLyrics.querySelector('.mu-lyr-inner');
-    if(inner){
-      if(inner.children[muActiveLine])inner.children[muActiveLine].classList.remove('active');
-      if(inner.children[i])inner.children[i].classList.add('active');
-    }
-    muActiveLine=i;
-    var line=inner&&inner.children[i];
-    if(line)muLyrics.scrollTo({top:line.offsetTop-(muLyrics.clientHeight-line.offsetHeight)/2,behavior:'smooth'});
-  }
+  if(i>=n)i=n-1;
+  if(i===muActiveLine)return;
+  if(muLyrInner.children[muActiveLine])muLyrInner.children[muActiveLine].classList.remove('active');
+  muActiveLine=i;
+  var line=muLyrInner.children[i];
+  if(!line)return;
+  line.classList.add('active');
+  muLyrics.scrollTo({top:line.offsetTop-(muLyrics.clientHeight-line.offsetHeight)/2,behavior:'smooth'});
 }
+/* 播放期间用 rAF 逐帧同步：timeupdate 只有 ~4Hz，最多会慢 250ms，逐帧更跟手 */
+function muSyncTick(){
+  if(muAudio.paused||muAudio.seeking){muRafId=0;return}
+  muRafId=requestAnimationFrame(muSyncTick);
+  muSyncLyrics();
+}
+function muSyncStart(){muSyncLyrics();if(!muRafId)muRafId=requestAnimationFrame(muSyncTick)}
 function muSetPlayIcon(playing){
   muCover.classList.toggle('paused',!playing);
   muPlay.querySelector('.ic-play').hidden=playing;
@@ -1277,6 +1354,8 @@ function muLoadTrack(i,keepPlaying){
   muSeek.value=0;muSeek.style.setProperty('--fill','0%');
   muCur.textContent='0:00';muDur.textContent='0:00';
   muLyrics.innerHTML='<div class="mu-lyr-hint">歌词加载中…</div>';
+  muLyrInner=null;muActiveLine=-1;
+  if(muLyrWrap)muLyrWrap.classList.remove('timed','hover-lock');
   muLoadLyrics(muIdx).then(function(data){if(muIdx===reqIdx)muRenderLyrics(data)});
   /* 系统级媒体控制（Win11 媒体浮层可显示封面/标题并遥控） */
   if('mediaSession' in navigator){
@@ -1299,7 +1378,7 @@ muCover.addEventListener('click',muToggle);
 muPlay.addEventListener('click',muToggle);
 muPrev.addEventListener('click',function(){muLoadTrack(muIdx-1,!muAudio.paused)});
 muNext.addEventListener('click',function(){muLoadTrack(muIdx+1,!muAudio.paused)});
-muAudio.addEventListener('play',function(){muSetPlayIcon(true)});
+muAudio.addEventListener('play',function(){muSetPlayIcon(true);muSyncStart()});
 muAudio.addEventListener('pause',function(){muSetPlayIcon(false)});
 muAudio.addEventListener('timeupdate',function(){
   if(!muSeeking&&isFinite(muAudio.duration)&&muAudio.duration>0){
@@ -1308,7 +1387,7 @@ muAudio.addEventListener('timeupdate',function(){
     muSeek.style.setProperty('--fill',pct+'%');
     muCur.textContent=muFmt(muAudio.currentTime);
   }
-  muSyncLyrics();
+  if(muAudio.paused)muSyncLyrics();
 });
 muAudio.addEventListener('loadedmetadata',function(){muDur.textContent=muFmt(muAudio.duration)});
 muAudio.addEventListener('ended',function(){muLoadTrack(muIdx+1,true)});
@@ -1321,6 +1400,8 @@ muSeek.addEventListener('input',function(){
 muSeek.addEventListener('change',function(){
   muSeeking=false;
   if(isFinite(muAudio.duration))muAudio.currentTime=this.value/10*muAudio.duration;
+  muActiveLine=-2; /* 拖动后强制重算，避免高亮停留在旧行 */
+  muSyncLyrics();
 });
 /* 初始装载第一首（音频仅 metadata，封面+歌词轻量加载） */
 muLoadTrack(0,false);
