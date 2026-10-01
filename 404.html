@@ -205,6 +205,68 @@ body{
 .sp-snip{font-size:12px;color:var(--text-2);line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sp-item mark{background:color-mix(in srgb,var(--accent) 24%,transparent);color:var(--tint-text);border-radius:3px;padding:0 1px}
 
+/* ---------- 迷你音乐播放器（左下角，仅桌面端） ----------
+ * 三板块：左侧封面（点击播放/暂停）｜右上歌词（LRC 同步滚动）｜右下控制区 */
+.side-music{flex:none;padding:12px}
+.mu-main{display:flex;gap:12px}
+.mu-left{width:104px;flex:none;display:flex;flex-direction:column;justify-content:space-between}
+.mu-cover{
+  position:relative;width:104px;height:104px;border:none;padding:0;cursor:pointer;
+  border-radius:8px;overflow:hidden;background:var(--seg-bg);
+  box-shadow:0 4px 14px rgba(0,0,0,.18);
+}
+.mu-cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform var(--dur-normal) var(--ease-out)}
+.mu-cover:hover img{transform:scale(1.05)}
+.mu-cover:active img{transform:scale(.98)}
+.mu-glyph{
+  position:absolute;inset:0;display:grid;place-items:center;
+  background:rgba(0,0,0,.3);opacity:0;transition:opacity var(--dur-fast) var(--ease-out);
+}
+.mu-glyph svg{width:30px;height:30px;color:#fff;fill:#fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
+.mu-cover.paused .mu-glyph{opacity:1}
+.mu-meta{margin-top:8px;min-width:0}
+.mu-title{font-size:12.5px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-artist{font-size:11px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.mu-right{flex:1;min-width:0;display:flex;flex-direction:column}
+.mu-lyrics{
+  height:104px;overflow:hidden;position:relative;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 82%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 82%,transparent 100%);
+}
+.mu-lyr-inner{padding:40px 2px;display:flex;flex-direction:column;gap:5px}
+.mu-lyr-line{font-size:11.5px;line-height:1.5;color:var(--text-3);transition:color var(--dur-normal) var(--ease-out)}
+.mu-lyr-line.active{color:var(--text-1);font-weight:600}
+.mu-lyr-hint{font-size:11.5px;color:var(--text-3);padding:34px 2px;line-height:1.8;text-align:center}
+.mu-lyr-static-hint{padding:0 0 4px;font-size:10px;text-align:left;opacity:.85}
+
+.mu-ctrl{margin-top:8px}
+.mu-progress{display:flex;align-items:center;gap:8px}
+.mu-time{font-size:10px;color:var(--text-3);font-variant-numeric:tabular-nums;flex:none;min-width:26px}
+.mu-time:last-child{text-align:right}
+.mu-seek{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:14px;background:none;cursor:pointer;--fill:0%}
+.mu-seek::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) var(--fill),var(--seg-bg) var(--fill))}
+.mu-seek::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;margin-top:-4px;border-radius:50%;background:var(--accent);border:none;box-shadow:0 0 0 2px var(--solid-strong);transition:transform var(--dur-faster) var(--ease-out)}
+.mu-seek:hover::-webkit-slider-thumb,.mu-seek:active::-webkit-slider-thumb{transform:scale(1.25)}
+.mu-seek::-moz-range-track{height:4px;border-radius:2px;background:var(--seg-bg)}
+.mu-seek::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+.mu-seek::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--solid-strong)}
+
+.mu-btns{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px}
+.mu-btn{
+  width:30px;height:30px;border:none;border-radius:50%;background:none;color:var(--text-2);
+  display:grid;place-items:center;cursor:pointer;padding:0;
+  transition:background var(--dur-faster) var(--ease-out),color var(--dur-faster) var(--ease-out),transform var(--dur-faster) var(--ease-out);
+}
+.mu-btn:hover{background:var(--hover-tint);color:var(--text-1)}
+.mu-btn:active{transform:scale(.94)}
+.mu-btn svg{width:17px;height:17px;fill:currentColor}
+.mu-btn.prev svg{transform:scaleX(-1)}
+.mu-play{width:36px;height:36px;background:var(--accent);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 45%,transparent)}
+.mu-play:hover{background:var(--accent);color:#fff;filter:brightness(1.08)}
+.mu-play svg{width:18px;height:18px}
+.mu-play .ic-play,.mu-play .ic-pause{display:grid;place-items:center}
+
 .card{border-radius:var(--radius)}
 
 /* 个人信息卡 */
@@ -554,6 +616,8 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   .profile-name{font-size:16px}
   .github{flex:1 1 auto}
   .side-search{flex:1 1 100%}
+  /* 迷你播放器仅桌面端提供，移动端隐藏 */
+  .side-music{display:none}
   .sp-kbd{display:none}
   .flyout-close{display:grid}
   /* 底部抽屉：从屏幕底部滑出，全宽、顶部圆角，拇指热区友好 */
@@ -608,6 +672,47 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
       </span>
       <span class="gh-arrow" aria-hidden="true"></span>
     </a>
+
+    <!-- 左下角：迷你音乐播放器（Fluent 风格，仅桌面端） -->
+    <section class="card acrylic reveal side-music" id="musicCard" aria-label="音乐播放器">
+      <audio id="muAudio" preload="metadata"></audio>
+      <div class="mu-main">
+        <div class="mu-left">
+          <button class="mu-cover paused" id="muCover" aria-label="播放或暂停">
+            <img id="muCoverImg" alt="专辑封面">
+            <span class="mu-glyph" aria-hidden="true">
+              <svg viewBox="0 0 20 20"><path d="M6.3 4.9c0-.9.98-1.45 1.74-.98l7.6 4.68a1.15 1.15 0 0 1 0 1.96l-7.6 4.68c-.76.47-1.74-.08-1.74-.98V4.9Z"/></svg>
+            </span>
+          </button>
+          <div class="mu-meta">
+            <div class="mu-title" id="muTitle">—</div>
+            <div class="mu-artist" id="muArtist">—</div>
+          </div>
+        </div>
+        <div class="mu-right">
+          <div class="mu-lyrics" id="muLyrics"><div class="mu-lyr-hint">点播放键开始<br>歌词将在此同步滚动</div></div>
+          <div class="mu-ctrl">
+            <div class="mu-progress">
+              <span class="mu-time" id="muCur">0:00</span>
+              <input class="mu-seek" id="muSeek" type="range" min="0" max="1000" value="0" step="1" aria-label="播放进度">
+              <span class="mu-time" id="muDur">0:00</span>
+            </div>
+            <div class="mu-btns">
+              <button class="mu-btn prev" id="muPrev" aria-label="上一首">
+                <svg viewBox="0 0 20 20"><path d="M5.5 5.3c0-.86.95-1.38 1.68-.92l7.06 4.7c.7.47.7 1.5 0 1.96l-7.06 4.7c-.73.46-1.68-.06-1.68-.92V5.3Z"/><rect x="14.2" y="4" width="2.6" height="12" rx="1.3"/></svg>
+              </button>
+              <button class="mu-btn mu-play" id="muPlay" aria-label="播放">
+                <span class="ic-play"><svg viewBox="0 0 20 20"><path d="M6.3 4.9c0-.9.98-1.45 1.74-.98l7.6 4.68a1.15 1.15 0 0 1 0 1.96l-7.6 4.68c-.76.47-1.74-.08-1.74-.98V4.9Z"/></svg></span>
+                <span class="ic-pause" hidden><svg viewBox="0 0 20 20"><rect x="5.2" y="4" width="3.6" height="12" rx="1.5"/><rect x="11.2" y="4" width="3.6" height="12" rx="1.5"/></svg></span>
+              </button>
+              <button class="mu-btn next" id="muNext" aria-label="下一首">
+                <svg viewBox="0 0 20 20"><path d="M5.5 5.3c0-.86.95-1.38 1.68-.92l7.06 4.7c.7.47.7 1.5 0 1.96l-7.06 4.7c-.73.46-1.68-.06-1.68-.92V5.3Z"/><rect x="14.2" y="4" width="2.6" height="12" rx="1.3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- 左下角：全站搜索（原预留区域） -->
     <div class="side-search">
@@ -1086,6 +1191,139 @@ el('swatches').innerHTML=ACCENTS.map(function(c){
 el('swatches').addEventListener('click',function(e){
   var s=e.target.closest('.swatch');if(s)setSetting('accent',s.dataset.accent);
 });
+
+/* ================= 迷你音乐播放器（左下角，仅桌面端） =================
+ * 三板块：左侧封面（点击播放/暂停）｜右上歌词｜右下控制区。
+ * 懒加载策略：音频 preload=metadata（不整首下载），封面仅当前曲目，
+ * 歌词首次切到该曲才 fetch 并缓存。 */
+var PLAYLIST=[
+  {title:'太聪明',artist:'陈绮贞',src:'music/mp3/tai_cong_ming.mp3',cover:'music/covers/tai_cong_ming.webp',lrc:'music/lyrics/tai_cong_ming.lrc'},
+  {title:'水星记',artist:'郭顶',src:'music/mp3/shui_xing_ji.mp3',cover:'music/covers/shui_xing_ji.webp',lrc:'music/lyrics/shui_xing_ji.lrc'},
+  {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.txt'}
+];
+var muAudio=el('muAudio'),muCover=el('muCover'),muCoverImg=el('muCoverImg'),
+    muTitle=el('muTitle'),muArtist=el('muArtist'),muLyrics=el('muLyrics'),
+    muSeek=el('muSeek'),muCur=el('muCur'),muDur=el('muDur'),
+    muPlay=el('muPlay'),muPrev=el('muPrev'),muNext=el('muNext');
+var muIdx=0,muSeeking=false,muLyricCache={},muActiveLine=-1;
+
+function muFmt(s){
+  if(!isFinite(s))return'0:00';
+  s=Math.max(0,Math.floor(s));
+  return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);
+}
+function parseLRC(text){
+  var out=[],rows=text.split(/\r?\n/),re=/\[(\d{1,2}):(\d{1,2}(?:\.\d{1,3})?)\]/g,m;
+  rows.forEach(function(row){
+    re.lastIndex=0;var times=[];
+    while((m=re.exec(row)))times.push(parseInt(m[1],10)*60+parseFloat(m[2]));
+    var txt=row.replace(/\[[^\]]*\]/g,'').trim();
+    if(!txt)return;
+    times.forEach(function(t){out.push({t:t,text:txt})});
+  });
+  out.sort(function(a,b){return a.t-b.t});
+  return out;
+}
+function muLoadLyrics(i){
+  if(muLyricCache[i]!==undefined)return Promise.resolve(muLyricCache[i]);
+  return fetch(assetUrl(PLAYLIST[i].lrc)).then(function(r){return r.text()}).then(function(text){
+    var timed=/\[\d{1,2}:\d{1,2}/.test(text);
+    muLyricCache[i]=timed?{timed:true,lines:parseLRC(text)}:{timed:false,lines:text.split(/\r?\n/).filter(function(l){return l.trim()})};
+    return muLyricCache[i];
+  }).catch(function(){muLyricCache[i]={timed:false,lines:[]};return muLyricCache[i]});
+}
+function muRenderLyrics(data){
+  if(!data||!data.lines.length){muLyrics.innerHTML='<div class="mu-lyr-hint">暂无歌词</div>';return;}
+  var html='';
+  if(!data.timed)html+='<div class="mu-lyr-hint mu-lyr-static-hint">纯文本歌词 · 无时间同步</div>';
+  html+=data.lines.map(function(l){
+    return '<div class="mu-lyr-line">'+escHtml(data.timed?l.text:l)+'</div>';
+  }).join('');
+  muLyrics.innerHTML='<div class="mu-lyr-inner">'+html+'</div>';
+  muActiveLine=-1;
+  muLyrics.scrollTop=0;
+}
+function muSyncLyrics(){
+  var data=muLyricCache[muIdx];
+  if(!data||!data.timed)return;
+  var t=muAudio.currentTime,i=data.lines.length-1;
+  while(i>=0&&data.lines[i].t>t)i--;
+  i++;
+  if(i>=data.lines.length)i=data.lines.length-1;
+  if(i!==muActiveLine){
+    var inner=muLyrics.querySelector('.mu-lyr-inner');
+    if(inner){
+      if(inner.children[muActiveLine])inner.children[muActiveLine].classList.remove('active');
+      if(inner.children[i])inner.children[i].classList.add('active');
+    }
+    muActiveLine=i;
+    var line=inner&&inner.children[i];
+    if(line)muLyrics.scrollTo({top:line.offsetTop-(muLyrics.clientHeight-line.offsetHeight)/2,behavior:'smooth'});
+  }
+}
+function muSetPlayIcon(playing){
+  muCover.classList.toggle('paused',!playing);
+  muPlay.querySelector('.ic-play').hidden=playing;
+  muPlay.querySelector('.ic-pause').hidden=!playing;
+  muPlay.setAttribute('aria-label',playing?'暂停':'播放');
+}
+function muLoadTrack(i,keepPlaying){
+  muIdx=(i+PLAYLIST.length)%PLAYLIST.length;
+  var reqIdx=muIdx,t=PLAYLIST[muIdx];
+  muAudio.src=assetUrl(t.src);
+  muCoverImg.src=assetUrl(t.cover);
+  muTitle.textContent=t.title;muTitle.title=t.title+' - '+t.artist;
+  muArtist.textContent=t.artist;muArtist.title=t.title+' - '+t.artist;
+  muSeek.value=0;muSeek.style.setProperty('--fill','0%');
+  muCur.textContent='0:00';muDur.textContent='0:00';
+  muLyrics.innerHTML='<div class="mu-lyr-hint">歌词加载中…</div>';
+  muLoadLyrics(muIdx).then(function(data){if(muIdx===reqIdx)muRenderLyrics(data)});
+  /* 系统级媒体控制（Win11 媒体浮层可显示封面/标题并遥控） */
+  if('mediaSession' in navigator){
+    try{
+      navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:t.artist,album:'Cookiesの海棠乡',artwork:[{src:assetUrl(t.cover),sizes:'256x256'}]});
+      navigator.mediaSession.setActionHandler('play',function(){muAudio.play()});
+      navigator.mediaSession.setActionHandler('pause',function(){muAudio.pause()});
+      navigator.mediaSession.setActionHandler('previoustrack',function(){muLoadTrack(muIdx-1,true)});
+      navigator.mediaSession.setActionHandler('nexttrack',function(){muLoadTrack(muIdx+1,true)});
+    }catch(e){}
+  }
+  if(keepPlaying)muAudio.play().catch(function(){});
+}
+function muToggle(){
+  if(muAudio.paused){if(!muAudio.src)muAudio.src=assetUrl(PLAYLIST[muIdx].src);muAudio.play().catch(function(){muToastFail()})}
+  else muAudio.pause();
+}
+function muToastFail(){toast('歌曲加载失败，请稍后再试')}
+muCover.addEventListener('click',muToggle);
+muPlay.addEventListener('click',muToggle);
+muPrev.addEventListener('click',function(){muLoadTrack(muIdx-1,!muAudio.paused)});
+muNext.addEventListener('click',function(){muLoadTrack(muIdx+1,!muAudio.paused)});
+muAudio.addEventListener('play',function(){muSetPlayIcon(true)});
+muAudio.addEventListener('pause',function(){muSetPlayIcon(false)});
+muAudio.addEventListener('timeupdate',function(){
+  if(!muSeeking&&isFinite(muAudio.duration)&&muAudio.duration>0){
+    var pct=muAudio.currentTime/muAudio.duration*100;
+    muSeek.value=Math.round(pct*10);
+    muSeek.style.setProperty('--fill',pct+'%');
+    muCur.textContent=muFmt(muAudio.currentTime);
+  }
+  muSyncLyrics();
+});
+muAudio.addEventListener('loadedmetadata',function(){muDur.textContent=muFmt(muAudio.duration)});
+muAudio.addEventListener('ended',function(){muLoadTrack(muIdx+1,true)});
+muAudio.addEventListener('error',function(){if(muAudio.src)muToastFail()});
+muSeek.addEventListener('input',function(){
+  muSeeking=true;
+  muSeek.style.setProperty('--fill',(this.value/10)+'%');
+  if(isFinite(muAudio.duration))muCur.textContent=muFmt(this.value/10*muAudio.duration);
+});
+muSeek.addEventListener('change',function(){
+  muSeeking=false;
+  if(isFinite(muAudio.duration))muAudio.currentTime=this.value/10*muAudio.duration;
+});
+/* 初始装载第一首（音频仅 metadata，封面+歌词轻量加载） */
+muLoadTrack(0,false);
 
 /* ================= 全站搜索（左下角） ================= */
 var searchPanel=el('searchPanel'),searchInput=el('searchInput'),
