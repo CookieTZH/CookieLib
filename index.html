@@ -1508,7 +1508,11 @@ var PLAYLIST=[
   {title:'水星记',artist:'郭顶',src:'music/mp3/shui_xing_ji.mp3',cover:'music/covers/shui_xing_ji.webp',lrc:'music/lyrics/shui_xing_ji.lrc',offset:0.5},
   {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.txt',offset:0},
   {title:"Nothing's Gonna Change My Love For You",artist:'方大同',src:'music/mp3/nothing_change_my_love.mp3',cover:'music/covers/nothing_change_my_love.jpg',lrc:'music/lyrics/nothing_change_my_love.lrc',offset:1},
-  {title:'黑洞里',artist:'方大同',src:'music/mp3/hei_dong_li.mp3',cover:'music/covers/hei_dong_li.webp',lrc:'music/lyrics/hei_dong_li.lrc',offset:0.5}
+  {title:'黑洞里',artist:'方大同',src:'music/mp3/hei_dong_li.mp3',cover:'music/covers/hei_dong_li.webp',lrc:'music/lyrics/hei_dong_li.lrc',offset:0.5},
+  /* 「夏天的梦」是舒缓的钢琴+人声合唱，互相关给出 +3.64s 但那是节拍旁瓣：
+   * 首句标注 24.00 正落在前奏静默谷（23.0-23.9 仅 0.013）结束、音乐回升处，
+   * 副歌 77.00 后 0.7s 出现起音峰 → 真实偏移接近 0，按整秒惯例取 0.5。 */
+  {title:'夏天的梦是什么颜色的呢',artist:'上海彩虹室内合唱团',src:'music/mp3/summer_dream.mp3',cover:'music/covers/summer_dream.webp',lrc:'music/lyrics/summer_dream.lrc',offset:0.5}
 ];
 var muAudio=el('muAudio'),muCover=el('muCover'),muCoverImg=el('muCoverImg'),
     muTitle=el('muTitle'),muArtist=el('muArtist'),muLyrics=el('muLyrics'),
@@ -1531,7 +1535,9 @@ var STORIES=[
   [ {t:'One thing you can be sure of',q:true},
     {t:'1985 年班森首唱时它没红，两年后被一个 17 岁少年唱成英国榜冠军。方大同的第一张翻唱专辑把它又捡了回来——有些话不怕说旧，只怕不说。'} ],
   [ {t:'我的一片地 藏在黑洞里',q:true},
-    {t:'2008 年的《橙月》里，周耀辉写了一个没有引力的私人宇宙：树上长爱情，河水洗回忆。想带你进来，先得让你放下地球人那些无聊的老传奇。'} ]
+    {t:'2008 年的《橙月》里，周耀辉写了一个没有引力的私人宇宙：树上长爱情，河水洗回忆。想带你进来，先得让你放下地球人那些无聊的老传奇。'} ],
+  [ {t:'是关门轻轻的背影 是离开悄悄的你',q:true},
+    {t:'灵感来自金承志 15 岁那年的毕业旅行。2018 年在《夏日安可》专场首演，2023 年的录音室版由吴经纬重新编曲，添了双簧管与大提琴。彩虹的歌大多不靠炫技，这一首尤其——四个声部只是轻轻地把夏天说了出来。'} ]
 ];
 function muRenderStory(i){
   muStoryText.textContent='';
