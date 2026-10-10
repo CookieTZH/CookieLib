@@ -1,0 +1,15 @@
+{
+  "_note": "资料库清单。/pictures 路由按此渲染缩略图网格，点击进入查看器（可复制/放大/下载）。file 与 thumb 都是相对 pics/ 的路径；thumb 省略时直接用原图。增删条目只要改这个数组（顺序即展示顺序）。文章里引用过的图、数据图都应登记到这里。",
+  "items": [
+    { "file": "xxt/fxing.jpg",                        "thumb": "xxt/t/fxing.jpg",                        "title": "F 型扫视热区（示意图）" },
+    { "file": "xxt/iknowdesignfully.png",             "thumb": "xxt/t/iknowdesignfully.png",             "title": "配色失控的反面案例" },
+    { "file": "xxt/uyuyu.jpg",                        "thumb": "xxt/t/uyuyu.jpg",                        "title": "高饱和配色的极端例子（引用自 B 站 MV）" },
+    { "file": "background/wp.jpg",                    "thumb": "background/t/wp.jpg",                    "title": "仰望天空" },
+    { "file": "background/dark.jpg",                  "thumb": "background/t/dark.jpg",                  "title": "云隙之光" },
+    { "file": "background/pic3.jpg",                  "thumb": "background/t/pic3.jpg",                  "title": "教室走廊" },
+    { "file": "background/pic4.jpg",                  "thumb": "background/t/pic4.jpg",                  "title": "雨夜站台" },
+    { "file": "background/21898.png",                 "thumb": "background/t/21898.png",                 "title": "挥手" },
+    { "file": "background/175951.jpg",                "thumb": "background/t/175951.jpg",                "title": "雨夜巴士" },
+    { "file": "background/1749209305501_P30QG.jpg",   "thumb": "background/t/1749209305501_P30QG.jpg",   "title": "演唱会舞台" }
+  ]
+}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-bg="wp" data-theme="light" data-transparency="on" data-corner="round">
+<html lang="zh-CN" data-bg="wp" data-theme="light" data-transparency="on">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,13 +15,16 @@
   if(s.bg)d.dataset.bg=s.bg;
   if(s.theme)d.dataset.theme=s.theme;
   if(s.transparency)d.dataset.transparency=s.transparency;
-  if(s.corner)d.dataset.corner=s.corner;
+  /* 圆角是固定样式，不再是可选项；旧存档里可能存过 corner:'square'，
+   * 这里强制清掉，避免老用户带着方角进站（属性不存在时即走默认的 round） */
+  d.removeAttribute('data-corner');
   if(s.accent)d.style.setProperty('--accent',s.accent);
 }catch(e){}})();
 </script>
 <style>
 :root{
   --accent:#0078D4;
+  /* 圆角固定为 8px：曾是可切换项（方形 2px），已废弃开关、写死为圆角 */
   --radius:8px;
   /* WinUI 3 官方 Fluent 缓动曲线（Timing and easing 规范）：
    * Fast Out, Slow In   —— 对象进入场景（导航/生成），末尾强摩擦减速
@@ -36,7 +39,6 @@
   --dur-fast:167ms;
   --dur-faster:83ms;
 }
-html[data-corner="square"]{--radius:2px}
 
 html[data-theme="light"]{
   --text-1:#1b1b1b;
@@ -197,8 +199,9 @@ body{
 }
 .side{display:flex;flex-direction:column;gap:14px;min-height:0}
 
-/* ---------- 左下角全站搜索 ---------- */
-.side-search{margin-top:auto;position:relative;flex:none}
+/* ---------- 左下角：资料库 + 全站搜索 ---------- */
+.side-pics{margin-top:auto;margin-bottom:10px;position:relative;flex:none}
+.side-search{position:relative;flex:none}
 .search-pill{
   display:flex;align-items:center;gap:12px;width:100%;
   padding:13px 16px;cursor:pointer;font-family:inherit;color:inherit;text-align:left;
@@ -375,6 +378,12 @@ body{
 .mu-play:hover{background:var(--accent);color:#fff;filter:brightness(1.08)}
 .mu-play svg{width:18px;height:18px}
 .mu-play .ic-play,.mu-play .ic-pause{display:grid;place-items:center}
+/* 展开钮只在移动端出现（桌面端双击卡片即展开）：桌面控制区只有约 180px 宽，
+ * 四个按钮 156px 刚好，第五个会溢出。
+ * 下载钮两端口都在。 */
+.mu-expand{display:none}
+.mu-btn:disabled{opacity:.45;cursor:default}
+.mu-btn:disabled:hover{background:none;color:var(--text-2)}
 
 /* ---------- 放大播放页（Now Playing）：双击迷你卡片从左下角滑出 ----------
  * 实现方式不是「另做一个面板、把 DOM 搬进去」，而是让 #musicCard 自己换一套
@@ -624,6 +633,41 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
 }
 .reader-content strong{font-weight:600}
 .reader-content img{max-width:100%;border-radius:8px;margin:16px 0}
+/* ---------- 投稿文章的扩展内容（引文卡片 / 表格 / 矢量插图） ----------
+ * 本站正文默认只有 p/h/ul/blockquote/img；下面是给「外部投稿」补的最小集合。
+ * 全部用既有变量，深浅色自动跟随，不引入新的模糊面片。 */
+.reader-content .tips{
+  margin:18px 0;padding:14px 16px;border-radius:8px;
+  background:var(--control-fill);
+  border:1px solid var(--card-border);
+  border-left:3px solid var(--accent);
+}
+.reader-content .tips p{margin:6px 0;color:var(--text-2)}
+.reader-content .tips p:first-child{margin-top:0}
+.reader-content .tips p:last-child{margin-bottom:0}
+/* 引文原文（lang="en"）：稍微收窄字号并加一点斜度，和中文译文区分开 */
+.reader-content .tips p[lang="en"]{font-size:14.5px;color:var(--text-1)}
+.reader-content table{
+  width:100%;border-collapse:collapse;margin:18px 0;font-size:14.5px;
+  border:1px solid var(--card-border);border-radius:8px;overflow:hidden;
+}
+.reader-content th,.reader-content td{
+  padding:9px 13px;text-align:left;border-bottom:1px solid var(--card-border);
+}
+.reader-content th{background:var(--control-fill);font-weight:600;color:var(--text-1)}
+.reader-content tr:last-child td{border-bottom:none}
+.reader-content td{color:var(--text-2)}
+/* 矢量插图：窄屏可横向滚动，避免 SVG 被压扁 */
+.reader-content .wfig{margin:20px 0}
+.reader-content .wfig-scroll{overflow-x:auto;overscroll-behavior-x:contain}
+.reader-content .wfig svg{display:block;min-width:560px;width:100%;height:auto}
+.reader-content figcaption{font-size:13px;color:var(--text-3);text-align:center;margin-top:8px}
+/* 投稿署名：正文头部一行小字 */
+.reader-content .article-byline{
+  font-size:13px;color:var(--text-3);margin:0 0 18px;
+  padding-bottom:14px;border-bottom:1px solid var(--card-border);
+}
+.reader-content .article-byline a{color:var(--accent)}
 .reader-close{
   pointer-events:auto;position:absolute;top:28px;right:32px;z-index:1;
   width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
@@ -658,7 +702,7 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
   filter:drop-shadow(0 12px 26px rgba(0,0,0,.28));
 }
 
-/* ---------- 图片查看器（/pictures/<path> 路由，与阅读页同款 Aero 玻璃） ---------- */
+/* ---------- 文件查看器（/pictures/<path> 路由，与阅读页同款 Aero 玻璃） ---------- */
 .pv-stage{
   flex:1;min-height:0;overflow:auto;
   display:flex;align-items:center;justify-content:center;
@@ -683,8 +727,66 @@ html[data-theme="dark"] .reader-avatar{border-color:rgba(255,255,255,.25)}
 }
 .pv-name{font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pv-dim{font-size:12px;color:var(--text-3);flex:none}
-.pv-raw{margin-left:auto;font-size:12.5px;color:var(--accent);text-decoration:none;flex:none}
-.pv-raw:hover{text-decoration:underline}
+/* 底栏按钮组：贴右排列（原来这里是一个纯文字链接「查看原图」） */
+.pv-acts{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none}
+.pv-btn{
+  display:inline-flex;align-items:center;gap:7px;flex:none;
+  font-family:inherit;font-size:12.5px;line-height:1;font-weight:500;
+  color:var(--text-1);text-decoration:none;cursor:pointer;
+  padding:8px 13px;border-radius:6px;
+  background:var(--control-fill);
+  border:1px solid var(--control-stroke);
+  border-bottom-color:var(--control-stroke-strong);
+  transition:background var(--dur-faster) var(--ease-out),transform var(--dur-faster) var(--ease-out);
+}
+.pv-btn svg{width:14px;height:14px;flex:none}
+.pv-btn:hover{background:var(--control-fill-hover)}
+.pv-btn:active{transform:scale(.97);background:var(--control-fill)}
+.pv-btn:disabled{opacity:.45;cursor:default;pointer-events:none}
+/* 主操作（下载）：用强调色实底，和左侧两个次级按钮拉开层级 */
+.pv-btn.primary{color:#fff;background:var(--accent);border-color:transparent}
+.pv-btn.primary:hover{background:color-mix(in srgb,var(--accent) 86%,#fff)}
+.pv-btn.primary:active{background:color-mix(in srgb,var(--accent) 86%,#000)}
+.pv-btn:focus-visible{outline:2px solid var(--text-1);outline-offset:2px}
+
+/* ---------- 资料库（/pictures 路由，与阅读页同款 Aero 玻璃） ---------- */
+.pg-head{
+  flex:none;display:flex;align-items:baseline;gap:10px;
+  padding:20px 64px 14px 26px;border-bottom:1px solid var(--reader-border);
+  background:var(--reader-scrim);
+}
+.pg-title{font-size:19px;font-weight:650;color:var(--text-1)}
+.pg-count{font-size:12.5px;color:var(--text-3)}
+.pg-grid{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));
+  gap:14px;padding:20px 26px 28px;align-content:start;
+  background:var(--reader-scrim);
+}
+.pg-item{
+  position:relative;padding:0;border:none;background:none;cursor:zoom-in;
+  aspect-ratio:4/3;border-radius:10px;overflow:hidden;display:block;width:100%;
+  box-shadow:0 2px 10px rgba(0,0,0,.14);
+  transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);
+}
+/* 资料库混放横图/竖图/截图，一律 contain 不裁切：
+ * cover 会把竖图（如 326×400）切掉大半，读者看不到内容；
+ * 衬底用半透明灰，透明 PNG 也能看清轮廓。 */
+.pg-item img{
+  width:100%;height:100%;object-fit:contain;display:block;
+  background:repeating-conic-gradient(rgba(128,128,128,.13) 0 25%,transparent 0 50%) 0 0/20px 20px;
+}
+.pg-item:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.24)}
+.pg-item:active{transform:scale(.985)}
+.pg-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 图注：压在缩略图底部，渐变压暗保证白字可读（深浅色主题都一样） */
+.pg-cap{
+  position:absolute;left:0;right:0;bottom:0;padding:24px 10px 8px;
+  font-size:12px;font-weight:600;color:#fff;text-align:left;
+  background:linear-gradient(to top,rgba(0,0,0,.62),transparent);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.pg-msg{grid-column:1/-1;padding:36px 0;text-align:center;font-size:14px;color:var(--text-2)}
 
 /* ---------- 右下角 Windows 徽标（Win11 任务栏样式） ---------- */
 /* 平时：只有徽标，无底板；悬停：浅色底板浮现；按下/打开：底板更实、带描边 */
@@ -855,9 +957,68 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   .avatar{width:56px;height:56px;margin:0}
   .profile-name{font-size:16px}
   .github{flex:1 1 auto}
-  .side-search{flex:1 1 100%}
-  /* 迷你播放器仅桌面端提供，移动端隐藏 */
-  .side-music{display:none}
+  .side-pics,.side-search{flex:1 1 100%}
+  /* ---------- 移动端音乐播放器 ----------
+   * 桌面端播放器靠「grid 定高 + flex:1」吸收侧栏剩余高度；移动端 .desktop 变成
+   * height:auto 的单列，flex:1 无从依赖，所以必须给显式高度。
+   * 内部由「封面在左 / 歌词在右」的两栏改成**竖排**：手机上 .mu-right 只剩约 200px，
+   * 五个按钮放不下，而且 30px 的按钮远小于拇指热区。竖排后歌词与控制区拿到整行宽度，
+   * 按钮能放大到 40px 以上。 */
+  .side-music{flex:1 1 100%;display:flex;height:min(400px,60vh);padding:14px}
+  .mu-main{flex-direction:column;gap:12px}
+  .mu-left{width:100%;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px}
+  .mu-coverwrap{flex:none;width:76px}
+  .mu-cover{width:76px;height:76px}
+  .mu-meta{margin-top:0;flex:1;min-width:0}
+  .mu-title{font-size:13.5px}
+  .mu-artist{font-size:11.5px;margin-top:3px}
+  .mu-lyr-inner{padding:26px 2px;gap:6px}
+  .mu-lyr-line{font-size:13px;line-height:1.55}
+  .mu-lyr-sub{font-size:11.5px}
+  .mu-ctrl{margin-top:10px}
+  .mu-btns{gap:8px;margin-top:8px}
+  .mu-btn{width:40px;height:40px}
+  .mu-btn svg{width:20px;height:20px}
+  .mu-play{width:48px;height:48px}
+  .mu-play svg{width:23px;height:23px}
+  .mu-expand{display:grid}
+  .mu-time{font-size:11px;min-width:30px}
+  .mu-seek{height:22px}
+  .mu-seek::-webkit-slider-thumb{width:14px;height:14px;margin-top:-5px}
+  /* 移动端没有 hover：偏移微调浮层（歌词对不齐时唯一的自救手段）改为常驻。
+   * 只去掉它自己那层模糊（性能预算），底色仍用 --acrylic-strong-bg ——
+   * 那是近乎不透明的面色，改成卡片色会跟背景糊在一起、根本看不见。 */
+  .mu-lyr-wrap.timed .mu-offset{opacity:1;transform:none;pointer-events:auto}
+  .mu-offset{-webkit-backdrop-filter:none;backdrop-filter:none}
+  /* ---------- 移动端放大页：整屏竖排 ---------- */
+  .side-music.np-mode{
+    left:0;top:0;right:0;bottom:0;width:100%;height:100%;height:100dvh;
+    border-radius:0;padding:14px 14px 18px;transform-origin:50% 70%;
+  }
+  .np-mode .mu-main{gap:14px}
+  .np-mode .mu-left{width:100%}
+  .np-mode .mu-coverwrap{width:104px}
+  .np-mode .mu-cover{width:104px;height:104px;border-radius:8px}
+  /* 封面只剩 104px，左下角的「歌曲故事」浮层会糊成一团 —— 移动端放大页不显示它 */
+  .np-mode .mu-story{display:none}
+  .np-mode .mu-meta{margin-top:0;padding-right:42px}   /* 给右上角关闭钮让位 */
+  .np-mode .mu-title{font-size:17px}
+  .np-mode .mu-artist{font-size:12.5px}
+  .np-mode .mu-lyr-inner{padding:40px 4px;gap:9px}
+  .np-mode .mu-lyr-line{font-size:15px;line-height:1.6}
+  .np-mode .mu-lyr-sub{font-size:12.5px}
+  .np-mode .mu-close{top:12px;right:12px;width:38px;height:38px}
+  .np-mode .mu-btns{gap:16px;margin-top:12px}
+  .np-mode .mu-btn{width:44px;height:44px}
+  .np-mode .mu-btn svg{width:22px;height:22px}
+  .np-mode .mu-play{width:54px;height:54px}
+  .np-mode .mu-play svg{width:26px;height:26px}
+  /* 放大页在移动端是整屏的，会盖住右下角的设置徽标 —— 但徽标压不回去：
+   * .desktop 有 position:relative;z-index:1，卡片在它**内部**，
+   * 自己的 z-index:76 出不了这个层叠上下文，而 .start(z-index:65) 在 body 层，
+   * 永远画在上面（桌面端放大页只有 920px 宽、两者不相交，所以从来没暴露）。
+   * 既然是模态全屏页，直接把徽标收起来 —— 关掉放大页就回来。 */
+  body:has(.side-music.np-mode) .start{display:none}
   .sp-kbd{display:none}
   .flyout-close{display:grid}
   /* 底部抽屉：从屏幕底部滑出，全宽、顶部圆角，拇指热区友好 */
@@ -875,6 +1036,14 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   .reader{margin:0;border-radius:0}
   .reader-close{top:14px;right:16px}
   .pv-stage{padding:60px 14px 16px}
+  /* 窄屏底栏：文件名可省（标题同图，尺寸信息保留），三个按钮平均分宽 */
+  .pv-bar{padding:10px 12px;gap:10px}
+  .pv-name{display:none}
+  .pv-acts{margin-left:0;flex:1;gap:6px}
+  .pv-btn{flex:1;justify-content:center;padding:9px 8px}
+  /* 画廊：缩略图更小更密，标题栏给右上角关闭钮留出空间 */
+  .pg-head{padding:16px 60px 12px 18px}
+  .pg-grid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;padding:16px 14px 24px}
   .reader-inner{padding:36px 22px 60px}
   .reader-title{font-size:24px}
   /* ---------- 移动端材质降级（性能开关） ----------
@@ -896,7 +1065,7 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
     --acrylic-strong-tint:color-mix(in srgb,var(--accent) 14%,rgba(28,28,28,.94));
   }
   .acrylic,.acrylic-strong{-webkit-backdrop-filter:none;backdrop-filter:none}
-  /* 阅读页/图片查看器只保留唯一的一层玻璃（沉浸感的关键），半径 24 → 16px */
+  /* 阅读页/文件查看器只保留唯一的一层玻璃（沉浸感的关键），半径 24 → 16px */
   .reader{-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
   /* 移动端阅读页是全出血的（margin:0;border-radius:0），遮罩整层被盖住 ——
    * 也就是说这层全屏 blur 100% 是白烧的，直接去掉。 */
@@ -982,6 +1151,10 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
               <span class="mu-time" id="muDur">0:00</span>
             </div>
             <div class="mu-btns">
+              <!-- 展开：仅移动端显示（桌面端双击卡片即展开，按钮会挤爆 180px 的控制区） -->
+              <button class="mu-btn mu-expand" id="muExpand" aria-label="展开播放器" title="展开播放器">
+                <svg viewBox="0 0 20 20" style="fill:none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.4 3.3H4.5c-.7 0-1.2.5-1.2 1.2v2.9"/><path d="M12.6 3.3h2.9c.7 0 1.2.5 1.2 1.2v2.9"/><path d="M7.4 16.7H4.5c-.7 0-1.2-.5-1.2-1.2v-2.9"/><path d="M12.6 16.7h2.9c.7 0 1.2-.5 1.2-1.2v-2.9"/></svg>
+              </button>
               <button class="mu-btn prev" id="muPrev" aria-label="上一首">
                 <svg viewBox="0 0 20 20"><path d="M5.5 5.3c0-.86.95-1.38 1.68-.92l7.06 4.7c.7.47.7 1.5 0 1.96l-7.06 4.7c-.73.46-1.68-.06-1.68-.92V5.3Z"/><rect x="14.2" y="4" width="2.6" height="12" rx="1.3"/></svg>
               </button>
@@ -992,6 +1165,9 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
               <button class="mu-btn next" id="muNext" aria-label="下一首">
                 <svg viewBox="0 0 20 20"><path d="M5.5 5.3c0-.86.95-1.38 1.68-.92l7.06 4.7c.7.47.7 1.5 0 1.96l-7.06 4.7c-.73.46-1.68-.06-1.68-.92V5.3Z"/><rect x="14.2" y="4" width="2.6" height="12" rx="1.3"/></svg>
               </button>
+              <button class="mu-btn mu-down" id="muDown" aria-label="下载这首歌" title="下载这首歌">
+                <svg viewBox="0 0 20 20"><path d="M10 2.8c.5 0 .9.4.9.9v6.3l2.1-2.1a.9.9 0 1 1 1.27 1.27l-3.64 3.64a.9.9 0 0 1-1.27 0L5.73 9.17A.9.9 0 1 1 7 7.9l2.1 2.1V3.7c0-.5.4-.9.9-.9Z"/><rect x="3.7" y="15.5" width="12.6" height="1.8" rx=".9"/></svg>
+              </button>
             </div>
           </div>
         </div>
@@ -1001,6 +1177,18 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
       </button>
     </section>
+
+    <!-- 左下角：资料库（与搜索同款卡片） -->
+    <div class="side-pics">
+      <button class="card acrylic reveal search-pill" id="picsPill" aria-label="打开资料库">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <rect x="2.7" y="3.7" width="14.6" height="12.6" rx="2.4" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="7.5" cy="8.3" r="1.55" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M3.6 14.1l3.8-3.4 3.1 2.7 2.5-2.1 3.4 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sp-label">资料</span>
+      </button>
+    </div>
 
     <!-- 左下角：全站搜索（原预留区域） -->
     <div class="side-search">
@@ -1063,21 +1251,49 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
   </div>
 </div>
 
-<!-- 图片查看器：/pictures/<path> 路由的毛玻璃查看层 -->
-<div class="reader-layer" id="pvLayer" hidden role="dialog" aria-modal="true" aria-label="图片查看器">
-  <button class="reader-close" id="pvClose" title="关闭" aria-label="关闭图片查看器">
+<!-- 图片查看器：/pictures/<path> 路由的毛玻璃查看层（「资料」里点开单份文件用） -->
+<div class="reader-layer" id="pvLayer" hidden role="dialog" aria-modal="true" aria-label="文件查看器">
+  <button class="reader-close" id="pvClose" title="关闭" aria-label="关闭文件查看器">
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
   </button>
   <div class="reader">
     <div class="pv-stage" id="pvStage">
       <img id="pvImg" alt="">
-      <div class="pv-err" id="pvErr" hidden>图片不存在或路径不对<br><b id="pvErrPath"></b></div>
+      <div class="pv-err" id="pvErr" hidden>文件不存在或路径不对<br><b id="pvErrPath"></b></div>
     </div>
     <div class="pv-bar">
       <span class="pv-name" id="pvName"></span>
       <span class="pv-dim" id="pvDim"></span>
-      <a class="pv-raw" id="pvRaw" target="_blank" rel="noopener">查看原图</a>
+      <!-- 底栏操作区：复制图片 / 放大查看原图 / 下载 -->
+      <div class="pv-acts">
+        <button type="button" class="pv-btn" id="pvCopy" title="复制图片到剪贴板">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="7.2" y="7.2" width="9.1" height="9.1" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M12.4 4.6H6.1a2 2 0 0 0-2 2v6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span id="pvCopyLabel">复制</span>
+        </button>
+        <button type="button" class="pv-btn" id="pvZoom" title="在当前窗口查看原图（1:1）" aria-pressed="false">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="5.25" stroke="currentColor" stroke-width="1.6"/><path d="M13.1 13.1l3.3 3.3M9 6.6v4.8M6.6 9h4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span id="pvZoomLabel">查看原图</span>
+        </button>
+        <a class="pv-btn primary" id="pvDown" href="#" download>
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.2v8.4M6.5 8.6 10 12.1l3.5-3.5M4.2 15.4h11.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>下载</span>
+        </a>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- 资料库：/pictures 路由的毛玻璃图库（点击缩略图进入上面的查看器） -->
+<div class="reader-layer" id="pgLayer" hidden role="dialog" aria-modal="true" aria-label="资料库">
+  <button class="reader-close" id="pgClose" title="关闭" aria-label="关闭资料库">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.09 4.09a.75.75 0 0 1 1.06 0L10 8.94l4.85-4.85a.75.75 0 1 1 1.06 1.06L11.06 10l4.85 4.85a.75.75 0 1 1-1.06 1.06L10 11.06l-4.85 4.85a.75.75 0 1 1-1.06-1.06L8.94 10 4.09 5.15a.75.75 0 0 1 0-1.06Z"/></svg>
+  </button>
+  <div class="reader">
+    <div class="pg-head">
+      <span class="pg-title">资料</span>
+      <span class="pg-count" id="pgCount"></span>
+    </div>
+    <div class="pg-grid" id="pgGrid"></div>
   </div>
 </div>
 
@@ -1134,11 +1350,6 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
     <span class="switch"><input type="checkbox" id="transparencyToggle" checked><span class="slider"></span></span>
   </label>
 
-  <label class="switch-row">
-    <span class="switch-label">圆角样式</span>
-    <span class="switch"><input type="checkbox" id="cornerToggle" checked><span class="slider"></span></span>
-  </label>
-
   <div class="flyout-foot">
     <button class="link-btn" id="resetBtn">恢复默认</button>
   </div>
@@ -1162,11 +1373,11 @@ html[data-theme="dark"] .start:active{background:rgba(255,255,255,.17);border-co
 </button>
 
 <div class="toast acrylic-strong" id="toast" hidden></div>
-
 <script>
 /* ================= 数据 ================= */
-/* 方案 B：文章清单在 articles/index.json，逐篇文件在 articles/<id>.json。
- * 启动时 fetch 清单，逐篇加载正文，再渲染列表。加文章 = 新增一个 json 文件 + 在 index.json 登记一条。 */
+/* 文章编辑源：清单在 articles/index.json，逐篇正文在 articles/<id>.json。
+ * 站内点卡片时 fetchPost(id) 拉那一份 JSON 渲染阅读层（带缓存，切回零延迟）。
+ * 加文章 = 新增一个 json 文件 + 在 index.json 登记一条。 */
 var posts = [];
 
 /* ================= 站点根路径 =================
@@ -1180,10 +1391,19 @@ var BASE=(function(){
   /* 路径路由命中：直接以站点根为 BASE，免去逐级探测 */
   if(/^\/(articles|pictures)(\/|$)/.test(p))return '/';
   if(/\/index\.html$/i.test(p))return p.slice(0,-10); /* 去掉 index.html（10 字符） */
-  if(/\/$/.test(p))return p;
+  /* 只有 '/' 能同步确认是站点根。其余「以斜杠结尾的目录路径」无法确定 ——
+   * 曾经一律当作根，于是 /music/summer/ 这种野路径被判成根，
+   * 资源全被拼成 /music/summer/music/…（封面破图、歌词回退成 404 页 HTML、曲长 0:00）。
+   * 现在交给 ensureBase() 从自身逐级向上探测：子路径部署（/repo/）仍能命中，
+   * 野路径则会一路找到真正的根。 */
+  if(p==='/')return '/';
   return null; /* 深层路径，待探测 */
 })();
-function assetUrl(rel){return BASE+rel;}
+/* BASE 由 ensureBase() 探测（深层路径下是异步的）。所有调用都应发生在它之后，
+ * 但这里兜一层：直接把 BASE 拼进字符串时，null 会被转成字面量 "null"，
+ * 生成 src="nullmusic/covers/x.webp" 这种 URL —— 曾真实出过，表现为封面破图、
+ * 歌词 fetch 回退成 404 页的 HTML 源码、曲长 0:00。 */
+function assetUrl(rel){return (BASE||'/')+rel;}
 function ensureBase(){
   if(BASE)return Promise.resolve(BASE);
   var p;try{p=decodeURIComponent(location.pathname)}catch(e){p=location.pathname}
@@ -1198,7 +1418,9 @@ function ensureBase(){
   return cands.reduce(function(pr,c){
     return pr.catch(function(){
       return fetch(c+'articles/index.json').then(function(r){
-        if(!r.ok)throw 0;
+        /* 候选根不存在时，响应体其实是整份 404 页（与 index.html 同内容，上百 KB）。
+         * 这里注定失败，尽早丢弃 body —— 否则深层路径首访会白下两份大文件。 */
+        if(!r.ok){if(r.body&&r.body.cancel)r.body.cancel().catch(function(){});throw 0;}
         return r.json();
       }).then(function(j){
         if(!j||!j.posts)throw 0;
@@ -1238,7 +1460,7 @@ function injectFonts(){
 }
 
 var ACCENTS=['#0078D4','#8764B8','#00B7C3','#107C10','#C42B1C','#CA5010','#E3008C'];
-var DEFAULTS={bg:'wp',theme:'light',accent:'#0078D4',transparency:'on',corner:'round'};
+var DEFAULTS={bg:'wp',theme:'light',accent:'#0078D4',transparency:'on'};
 
 /* ================= 设置 ================= */
 var settings=(function(){
@@ -1278,7 +1500,6 @@ function applySettings(instant){
   d.dataset.bg=settings.bg;
   d.dataset.theme=settings.theme;
   d.dataset.transparency=settings.transparency;
-  d.dataset.corner=settings.corner;
   d.style.setProperty('--accent',settings.accent);
   setWallpaper(settings.bg,instant);
 
@@ -1287,7 +1508,6 @@ function applySettings(instant){
   el('themeSeg').dataset.active=settings.theme==='dark'?'1':'0'; /* 驱动滑动指示块 */
   document.querySelectorAll('.swatch').forEach(function(s){s.classList.toggle('active',s.dataset.accent===settings.accent)});
   el('transparencyToggle').checked=settings.transparency==='on';
-  el('cornerToggle').checked=settings.corner==='round';
   el('startBtn').setAttribute('aria-expanded',String(!flyout.hidden));
 }
 
@@ -1309,32 +1529,27 @@ function renderPosts(){
 /* ================= 文章阅读页 ================= */
 var overlay=el('overlay'),readerLayer=el('readerLayer'),readerBody=el('readerBody');
 var nfLayer=el('nfLayer');
-function openArticle(p){
-  /* 独占显示：先瞬时关掉 404 层与图片查看器 */
-  nfLayer.hidden=true;nfLayer.classList.remove('show');
-  pvLayer.hidden=true;pvLayer.classList.remove('show');
-  var chips=p.tags.map(function(t){return '<span class="chip">'+t+'</span>'}).join('');
-  readerBody.innerHTML='<div class="reader-inner">'
-    +'<h1 class="reader-title" id="readerTitle">'+p.title+'</h1>'
-    +'<div class="reader-credits">'
-      +'<div class="reader-avatar"><img src="'+assetUrl('pics/avatar/avatar.jpg')+'" alt="头像"></div>'
-      +'<div class="reader-by">'
-        +'<span class="reader-name">海棠花下</span>'
-        +'<span class="reader-home">还有多远才能进入你的心</span>'
-      +'</div>'
-      +'<div class="reader-time">'
-        +'<span class="date">'+p.date+'</span>'
-        +'<span class="chips">'+chips+'</span>'
-      +'</div>'
-    +'</div>'
-    +'<div class="reader-content">'+p.content+'</div>'
-  +'</div>';
-  enhanceCodeBlocks(readerBody);
-  /* 正文图片：路径统一修正到站点根（兼容旧 pictures/ 写法）；点击在 /pictures/ 查看器中打开 */
-  readerBody.querySelectorAll('.reader-content img').forEach(function(im){
+
+/* 正文增强：阅读层每次渲染完都要走一遍。
+ * [data-asset] 优先于 src：showArticle() 给头像写的是
+ * data-asset="pics/avatar/xxt.jpg"（不带 ../ 前缀），
+ * 由 fixAssets() 统一改写成 assetUrl(...)（站点根绝对路径）。
+ * 但 fixAssets 只扫初始 DOM，而阅读层是 showArticle() 事后 innerHTML 注入的，
+ * 那时 fixAssets 早已跑完 —— 所以这里必须自己再转一次，
+ * 否则头像会停在 data-asset 上、src 为空、头像不显示。 */
+function enhanceArticleContent(root){
+  root.querySelectorAll('[data-asset]').forEach(function(n){
+    var rel=n.getAttribute('data-asset');
+    if(!rel||n.tagName!=='IMG')return;
+    n.src=assetUrl(rel);
+  });
+  /* 正文图片：路径统一修正到站点根（兼容旧 pictures/ 写法）；点击在 /pictures/ 查看器中打开
+   * 文章里引用的图建议同时登记到 pics/index.json，读者才能从「资料」里找到 */
+  root.querySelectorAll('.reader-content img').forEach(function(im){
     var s=im.getAttribute('src')||'';
-    if(/^https?:/i.test(s))return;
-    var rel=s.replace(/^\//,'').replace(/^pictures\//,'pics/');
+    if(/^(https?:|data:|blob:)/i.test(s))return;
+    /* 剥掉前缀再判断：静态页里可能是 ../pics/...（子路径），浮层里可能是 pics/... */
+    var rel=s.replace(/^(\.\.\/)+/,'').replace(/^\//,'').replace(/^pictures\//,'pics/');
     if(!/^pics\//.test(rel))return;
     im.src=assetUrl(rel);
     im.style.cursor='zoom-in';
@@ -1343,17 +1558,19 @@ function openArticle(p){
       if(mm)nav('pictures/'+mm[1]);
     });
   });
-  readerLayer.hidden=false;overlay.hidden=false;
-  requestAnimationFrame(function(){requestAnimationFrame(function(){
-    readerLayer.classList.add('show');overlay.classList.add('show');
-  })});
-  el('readerClose').focus();
+  /* 投稿类文章正文里的外链一律新标签打开，避免读者一点就离开站点。
+   * 静态页在 build 时已写上 target/rel，这里再兜一层（幂等）。 */
+  root.querySelectorAll('.reader-content a[href^="http"]').forEach(function(a){
+    a.setAttribute('target','_blank');
+    a.setAttribute('rel','noopener');
+  });
 }
+
 function closeArticle(){
   if(readerLayer.hidden)return;
   readerLayer.classList.remove('show');overlay.classList.remove('show');
   setTimeout(function(){
-    readerLayer.hidden=true;overlay.hidden=nfLayer.hidden&&pvLayer.hidden;
+    readerLayer.hidden=true;overlay.hidden=nfLayer.hidden&&pvLayer.hidden&&pgLayer.hidden;
     readerBody.scrollTop=0;
   },280);
 }
@@ -1469,7 +1686,6 @@ el('themeSeg').addEventListener('click',function(e){
   setSetting('theme',b.dataset.themeSet);
 });
 el('transparencyToggle').addEventListener('change',function(){setSetting('transparency',this.checked?'on':'off')});
-el('cornerToggle').addEventListener('change',function(){setSetting('corner',this.checked?'round':'square')});
 el('resetBtn').addEventListener('click',function(){
   playThemeFade();
   settings=Object.assign({},DEFAULTS);saveSettings();applySettings();toast('已恢复默认设置');
@@ -1506,13 +1722,21 @@ var PLAYLIST=[
    *   桥段加厚压 141.00，0.05s 精度下台阶落在 19.10 而鼓点瞬态在 19.20 → 残差 <0.3s，取 0.5。 */
   {title:'太聪明',artist:'陈绮贞',src:'music/mp3/tai_cong_ming.mp3',cover:'music/covers/tai_cong_ming.webp',lrc:'music/lyrics/tai_cong_ming.lrc',offset:0.5},
   {title:'水星记',artist:'郭顶',src:'music/mp3/shui_xing_ji.mp3',cover:'music/covers/shui_xing_ji.webp',lrc:'music/lyrics/shui_xing_ji.lrc',offset:0.5},
-  {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.txt',offset:0},
+  /* 「Fakegreen」的 LRC 是**毫秒级**时间戳（非整秒），来源是网易云官方歌词（曲长 208.301s
+   * 与本地 mp3 的 208.30s 吻合，55 句与原始纯文本逐行一致）。
+   * 互相关实测 +0.39s（对照实验 ±0.01s 可复现，且 tau=0 不在曲线最低点、峰值高出邻域约 1.8 倍，
+   * 非旁瓣）；逐行最强起音延迟中位数 +0.28s → 取 0.4。
+   * 副行为中文翻译 —— parseLRC 会把「时间戳完全相同」的两行合并成 {text, sub}。 */
+  {title:'Fakegreen',artist:'ueil',src:'music/mp3/fakegreen.mp3',cover:'music/covers/fakegreen.jpeg',lrc:'music/lyrics/fakegreen.lrc',offset:0.4},
   {title:"Nothing's Gonna Change My Love For You",artist:'方大同',src:'music/mp3/nothing_change_my_love.mp3',cover:'music/covers/nothing_change_my_love.jpg',lrc:'music/lyrics/nothing_change_my_love.lrc',offset:1},
   {title:'黑洞里',artist:'方大同',src:'music/mp3/hei_dong_li.mp3',cover:'music/covers/hei_dong_li.webp',lrc:'music/lyrics/hei_dong_li.lrc',offset:0.5},
   /* 「夏天的梦」是舒缓的钢琴+人声合唱，互相关给出 +3.64s 但那是节拍旁瓣：
    * 首句标注 24.00 正落在前奏静默谷（23.0-23.9 仅 0.013）结束、音乐回升处，
    * 副歌 77.00 后 0.7s 出现起音峰 → 真实偏移接近 0，按整秒惯例取 0.5。 */
-  {title:'夏天的梦是什么颜色的呢',artist:'上海彩虹室内合唱团',src:'music/mp3/summer_dream.mp3',cover:'music/covers/summer_dream.webp',lrc:'music/lyrics/summer_dream.lrc',offset:0.5}
+  {title:'夏天的梦是什么颜色的呢',artist:'上海彩虹室内合唱团',src:'music/mp3/summer_dream.mp3',cover:'music/covers/summer_dream.webp',lrc:'music/lyrics/summer_dream.lrc',offset:0.5},
+  /* 「在云端」LRC 标注整齐（副歌 62.00 / 159.00 间隔 97s＝段落周期），
+   * 沿用同专辑《水星记》的 0.5——同一发行、同一挂载编曲标注习惯。 */
+  {title:'在云端',artist:'郭顶',src:'music/mp3/zai_yun_duan.mp3',cover:'music/covers/zai_yun_duan.webp',lrc:'music/lyrics/zai_yun_duan.lrc',offset:0.5}
 ];
 var muAudio=el('muAudio'),muCover=el('muCover'),muCoverImg=el('muCoverImg'),
     muTitle=el('muTitle'),muArtist=el('muArtist'),muLyrics=el('muLyrics'),
@@ -1520,9 +1744,11 @@ var muAudio=el('muAudio'),muCover=el('muCover'),muCoverImg=el('muCoverImg'),
     muPlay=el('muPlay'),muPrev=el('muPrev'),muNext=el('muNext'),
     muLyrWrap=el('muLyrWrap'),muOffset=el('muOffset'),muOffVal=el('muOffVal'),
     muMusicCard=el('musicCard'),muClose=el('muClose'),muFollow=el('muFollow'),
+    muDown=el('muDown'),muExpand=el('muExpand'),
     muStoryText=el('muStoryText'),npScrim=el('npScrim');
 var muIdx=0,muSeeking=false,muLyricCache={},muActiveLine=-1,muLyrInner=null,muRafId=0,
-    npOpen=false,muFollowOn=true,muFollowT=0,npAnimT=0;
+    npOpen=false,muFollowOn=true,muFollowT=0,npAnimT=0,
+    muObjUrl=null,muBlob=null,muBlobToken=0,muBlobReady=false,muPendingSeek=null;
 
 /* ---------- 歌曲故事（放大页封面左下角） ----------
  * 只写可查证的事实，不做演绎。q:true 的那一行是引用/原文，单独加重。 */
@@ -1537,7 +1763,9 @@ var STORIES=[
   [ {t:'我的一片地 藏在黑洞里',q:true},
     {t:'2008 年的《橙月》里，周耀辉写了一个没有引力的私人宇宙：树上长爱情，河水洗回忆。想带你进来，先得让你放下地球人那些无聊的老传奇。'} ],
   [ {t:'是关门轻轻的背影 是离开悄悄的你',q:true},
-    {t:'灵感来自金承志 15 岁那年的毕业旅行。2018 年在《夏日安可》专场首演，2023 年的录音室版由吴经纬重新编曲，添了双簧管与大提琴。彩虹的歌大多不靠炫技，这一首尤其——四个声部只是轻轻地把夏天说了出来。'} ]
+    {t:'灵感来自金承志 15 岁那年的毕业旅行。2018 年在《夏日安可》专场首演，2023 年的录音室版由吴经纬重新编曲，添了双簧管与大提琴。彩虹的歌大多不靠炫技，这一首尤其——四个声部只是轻轻地把夏天说了出来。'} ],
+  [ {t:'云层浮在山脉 好像只为对方存在',q:true},
+    {t:'2016 年，郭顶的第三张专辑《飞行器的执行周期》做了一张关于太空的概念唱片，十首歌讲一个飞行器的出发与落地。这一首是 Motown 味的 Soul 与 Blues，也是整张专辑里最不像科幻的一首——讲的还是那个人。'} ]
 ];
 function muRenderStory(i){
   muStoryText.textContent='';
@@ -1680,10 +1908,54 @@ function muSetPlayIcon(playing){
   muPlay.querySelector('.ic-pause').hidden=!playing;
   muPlay.setAttribute('aria-label',playing?'暂停':'播放');
 }
+/* ---------- 可 seek 的播放源（Blob 兜底） ----------
+ * 血案：托管在 Cloudflare Pages 上的静态资源**不实现 HTTP Range** ——
+ * 带 `Range: bytes=0-99` 去请求 mp3，服务器照样回 `200` + 整份文件，
+ * 响应里也没有 `Accept-Ranges`（实测确认，不是代理剥离请求头）。
+ * Chromium 据此把该媒体判定为「不可 seek」，此时给 `currentTime` 赋值会被
+ * 直接钳回 0：**拖完进度条弹回开头、时间读数也变回 0:00**。
+ * （已用本地不支持 Range 的 http.server 复现：松手后 currentTime=0。）
+ * 解法与服务器无关：把整首拉成 Blob，用 `blob:` URL 播放 —— Blob 是内存
+ * 字节流，永远可 seek。
+ * 策略是「**先用网络地址秒开 → 后台拉 Blob → 就绪后原地换源**」，
+ * 换源时接回播放进度与播放状态。拉取失败就静默退回原行为（只是不可 seek），
+ * 所以这条路径不会让客户端变得比原来更差。 */
+function muRevokeObjUrl(){
+  if(muObjUrl){URL.revokeObjectURL(muObjUrl);muObjUrl=null;}
+  muBlob=null;   /* 留着这份 Blob 只是给「下载」复用，换曲即失效 */
+}
+function muWarmBlob(rel,token){
+  /* force-cache 是为了尽量复用 <audio> 那次下载已经写进 HTTP 缓存的内容，
+   * 避免同一首歌下两遍（资源带 immutable，命中率很高）。 */
+  fetch(assetUrl(rel),{cache:'force-cache'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.blob();
+  }).then(function(b){
+    /* 换曲/已换源则作废这次预热，别把旧歌的 Blob 接到新歌上 */
+    if(token!==muBlobToken)return;
+    if(!muAudio.src||muAudio.src.indexOf('blob:')===0)return;
+    var cur=muAudio.currentTime,playing=!muAudio.paused;
+    muRevokeObjUrl();
+    muBlob=b;
+    muObjUrl=URL.createObjectURL(b);
+    muBlobReady=true;
+    muAudio.src=muObjUrl;
+    /* 换源会把播放位置清零，这里接回去。
+     * muPendingSeek：用户在 Blob 就绪前拖动过 —— 那一次必然被钳回 0，
+     * 现在把真正的目标位置补跳过去。 */
+    if(muPendingSeek!=null){cur=muPendingSeek;muPendingSeek=null;}
+    try{muAudio.currentTime=cur;}catch(e){}
+    if(playing)muAudio.play().catch(function(){});
+  }).catch(function(){/* 拉不到 blob 就继续用网络地址播放，仅损失 seek 能力 */});
+}
 function muLoadTrack(i,keepPlaying){
   muIdx=(i+PLAYLIST.length)%PLAYLIST.length;
   var reqIdx=muIdx,t=PLAYLIST[muIdx];
-  muAudio.src=assetUrl(t.src);
+  muBlobReady=false;muPendingSeek=null;
+  muRevokeObjUrl();
+  var blobToken=++muBlobToken;          /* 换曲即作废上一次预热 */
+  muAudio.src=assetUrl(t.src);          /* 先用网络地址，保证秒开 */
+  muWarmBlob(t.src,blobToken);          /* 后台换成可 seek 的 blob 源 */
   muCoverImg.src=assetUrl(t.cover);
   muTitle.textContent=t.title;muTitle.title=t.title+' - '+t.artist;
   muArtist.textContent=t.artist;muArtist.title=t.title+' - '+t.artist;
@@ -1714,10 +1986,58 @@ function muToggle(){
   else muAudio.pause();
 }
 function muToastFail(){toast('歌曲加载失败，请稍后再试')}
+/* ---------- 下载当前曲目 ----------
+ * 不直接把 <a download> 指向音频地址，两个原因：
+ *  1) 地址是拼音 slug（fakegreen.mp3），存到本地认不出是哪首歌 —— 要改成「歌名 - 歌手.ext」。
+ *  2) a[download] 只在同源生效，换 CORS 音源会被忽略而变成「打开新标签」。
+ * 所以走 fetch → Blob → objectURL + a.download。若播放时已经把整首拉成 Blob（见 muWarmBlob），
+ * 直接复用那份，不再下一遍。 */
+function muDownload(btn){
+  var t=PLAYLIST[muIdx];
+  if(!t)return;
+  var url=assetUrl(t.src);
+  var ext=(String(t.src).match(/\.(mp3|aac|m4a|ogg|wav|flac)$/i)||['','mp3'])[1].toLowerCase();
+  /* Windows 文件名不允许 : * ? " < > | 与斜杠，静默替换掉 */
+  var name=(t.title+' - '+t.artist+'.'+ext).replace(/[\\/:*?"<>|]/g,'_');
+  var btnS=btn||muDown;
+  if(btnS){btnS.disabled=true;btnS.setAttribute('aria-busy','true');}
+  var done=function(){if(btnS){btnS.disabled=false;btnS.removeAttribute('aria-busy');}};
+  var save=function(blob){
+    var href=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=href;a.download=name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    /* 立刻 revoke 会让下载中断，留一段时间再回收 */
+    setTimeout(function(){URL.revokeObjectURL(href)},20000);
+    toast('开始下载：'+name);
+  };
+  if(muBlob&&muBlob.size){
+    save(muBlob);done();return;      /* 播放时已缓存整首，零额外流量 */
+  }
+  fetch(url,{cache:'force-cache'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.blob();
+  }).then(function(b){
+    if(!b.size)throw new Error('空文件');
+    save(b);done();
+  }).catch(function(){
+    /* 兜底：退回直链导航。至少能让浏览器自己下载/播放，比什么都不做强。 */
+    var a=document.createElement('a');
+    a.href=url;a.download=name;
+    document.body.appendChild(a);a.click();a.remove();
+    toast('已改为直接打开音频：'+name);
+    done();
+  });
+}
 muCover.addEventListener('click',muToggle);
 muPlay.addEventListener('click',muToggle);
 muPrev.addEventListener('click',function(){muLoadTrack(muIdx-1,!muAudio.paused)});
 muNext.addEventListener('click',function(){muLoadTrack(muIdx+1,!muAudio.paused)});
+muDown.addEventListener('click',function(){muDownload(this)});
+/* 展开钮只在移动端可见（CSS 控制）；桌面端保持「双击卡片」这一既有手势 */
+muExpand.addEventListener('click',function(){openNP()});
 muAudio.addEventListener('play',function(){muSetPlayIcon(true);muSyncStart()});
 muAudio.addEventListener('pause',function(){muSetPlayIcon(false)});
 muAudio.addEventListener('timeupdate',function(){
@@ -1739,17 +2059,32 @@ muSeek.addEventListener('input',function(){
 });
 muSeek.addEventListener('change',function(){
   muSeeking=false;
-  if(isFinite(muAudio.duration)&&muAudio.duration>0)muAudio.currentTime=muSeekSeconds(this.value);
+  if(isFinite(muAudio.duration)&&muAudio.duration>0){
+    var sec=muSeekSeconds(this.value);
+    muAudio.currentTime=sec;
+    /* 服务器不支持 Range 时上面这次赋值会被钳回 0 —— 记下真实目标，
+     * 等后台 Blob 换源完成后补跳（见 muWarmBlob）。 */
+    muPendingSeek=muBlobReady?null:sec;
+  }
   muActiveLine=-2; /* 拖动后强制重算，避免高亮停留在旧行 */
   muSyncLyrics();
 });
 /* 键盘拖动 / 在窗口外松开鼠标等情况下 change 可能不来，兜底解锁，
- * 避免 muSeeking 卡在 true 让进度条再也不刷新。延到下一轮事件循环再解锁，
- * 保证同一次 mouseup 里同步派发的 change 已经先读到正确的 value。 */
-window.addEventListener('pointerup',function(){setTimeout(function(){muSeeking=false},0)});
+ * 避免 muSeeking 卡在 true 让进度条再也不刷新。
+ * ⚠️ 必须延后足够久：pointerup 早于 change 派发，若在这里立刻（或
+ * setTimeout 0）解锁，一次 timeupdate 就会抢先把 `muSeek.value` 覆写回
+ * 当前播放位置，随后 change 读到的就是被覆写的值 —— 松手后进度条弹回原处。
+ * 60ms 远大于同一次交互里 change 的派发时延，又不足以让人察觉卡顿。 */
+window.addEventListener('pointerup',function(){setTimeout(function(){muSeeking=false},60)});
 window.addEventListener('blur',function(){muSeeking=false});
-/* 初始装载第一首（音频仅 metadata，封面+歌词轻量加载） */
-muLoadTrack(0,false);
+/* seek 真的落地了就撤销「补跳」标记（服务器支持 Range、或已经是 blob 源时），
+ * 免得 Blob 晚一步就绪时把已经播过去的进度又倒回拖动点。 */
+muAudio.addEventListener('seeked',function(){
+  if(muPendingSeek!=null&&Math.abs(muAudio.currentTime-muPendingSeek)<1.5)muPendingSeek=null;
+});
+/* 初始装载第一首（音频仅 metadata，封面+歌词轻量加载）——
+ * 调用点不在这里，见文末「初始化」块：它必须等 ensureBase() 探测完 BASE 再执行。
+ * 放在这里的顶层会因为 BASE 还是 null 而拼出 "nullmusic/…"（深层路径首访必现）。 */
 
 /* ================= 放大播放页（Now Playing） =================
  * 双击迷你卡片打开 / 在放大页上再双击一次关闭。
@@ -1934,9 +2269,10 @@ document.addEventListener('pointerdown',function(e){
 
 /* ================= 404 页面 ================= */
 function open404(){
-  /* 独占显示：先瞬时关掉阅读层与图片查看器 */
+  /* 独占显示：先瞬时关掉阅读层、文件查看器与资料库 */
   readerLayer.hidden=true;readerLayer.classList.remove('show');
   pvLayer.hidden=true;pvLayer.classList.remove('show');
+  pgLayer.hidden=true;pgLayer.classList.remove('show');
   if(!nfLayer.hidden)return;
   /* 首次打开 404 时才加载角色图（懒加载，避免首屏多拉一张图） */
   nfLayer.querySelectorAll('[data-asset]').forEach(function(n){
@@ -1953,28 +2289,120 @@ function close404(){
   if(nfLayer.hidden)return;
   nfLayer.classList.remove('show');
   setTimeout(function(){
-    nfLayer.hidden=true;overlay.hidden=readerLayer.hidden&&pvLayer.hidden;
+    nfLayer.hidden=true;overlay.hidden=readerLayer.hidden&&pvLayer.hidden&&pgLayer.hidden;
   },280);
 }
 el('nfClose').addEventListener('click',goHome);
 el('nfHome').addEventListener('click',goHome);
 
-/* ================= 图片查看器（/pictures/<path>） =================
+/* ================= 文件查看器（/pictures/<path>） =================
  * 路径 /pictures/<path> 由 Netlify _redirects 回退到本页，这里解析路径并
- * 加载 pics/<path> 的图片（无扩展名时自动尝试常见后缀）。 */
+ * 加载 pics/<path> 里的图片/资料（无扩展名时自动尝试常见后缀）。 */
 var pvLayer=el('pvLayer'),pvStage=el('pvStage'),pvImg=el('pvImg'),pvErr=el('pvErr'),pvErrPath=el('pvErrPath'),
-    pvName=el('pvName'),pvDim=el('pvDim'),pvRaw=el('pvRaw');
+    pvName=el('pvName'),pvDim=el('pvDim'),pvDown=el('pvDown'),
+    pvCopy=el('pvCopy'),pvCopyLabel=el('pvCopyLabel'),pvZoom=el('pvZoom'),pvZoomLabel=el('pvZoomLabel');
 var PV_EXTS=['','.jpg','.jpeg','.png','.webp','.gif','.avif'];
-var pvTries=0,pvPath='';
+var pvTries=0,pvPath='',pvSrc='',pvZoomed=false,pvCopyBusy=false;
+/* 下载文件名：URL 末段（已编码，去掉查询串），空则回退 image */
+function pvFileName(){
+  var u=pvSrc.split('#')[0].split('?')[0];
+  var n=u.substring(u.lastIndexOf('/')+1);
+  return n||'image';
+}
+/* 放大态：图片按原始像素显示，容器出滚动条。用内联样式覆盖 .pv-stage img 的 max-* 约束 */
+function pvApplyZoom(){
+  if(pvZoomed){
+    pvImg.style.maxWidth='none';pvImg.style.maxHeight='none';
+    pvImg.style.width=pvImg.naturalWidth+'px';pvImg.style.height='auto';
+    pvZoom.classList.add('primary');
+    pvZoomLabel.textContent='适应窗口';
+    pvZoom.setAttribute('aria-pressed','true');
+    pvZoom.title='缩回适应窗口';
+  }else{
+    pvImg.style.maxWidth='';pvImg.style.maxHeight='';
+    pvImg.style.width='';pvImg.style.height='';
+    pvZoom.classList.remove('primary');
+    pvZoomLabel.textContent='查看原图';
+    pvZoom.setAttribute('aria-pressed','false');
+    pvZoom.title='在当前窗口查看原图（1:1）';
+  }
+}
+/* 下载：同源资源优先走 fetch+blob。
+ * a[download] 只在「同源」时对浏览器生效；站点若部署在别人域下（CORS），
+ * download 会被忽略而变成预览，所以失败时静默退回直接导航，行为降级但可用。 */
+function pvDownload(){
+  if(!pvSrc)return;
+  var name=pvFileName();
+  fetch(pvSrc,{mode:'cors'})
+    .then(function(r){if(!r.ok)throw 0;return r.blob();})
+    .then(function(b){
+      var u=URL.createObjectURL(b),a=document.createElement('a');
+      a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(u)},4000);
+    })
+    .catch(function(){
+      var a=document.createElement('a');
+      a.href=pvSrc;a.download=name;a.target='_blank';a.rel='noopener';
+      document.body.appendChild(a);a.click();a.remove();
+    });
+}
+pvDown.addEventListener('click',function(e){e.preventDefault();pvDownload();});
+/* 复制到剪贴板：ClipboardItem 需要 PNG，其他格式先经 canvas 转码（同源才拿得到像素） */
+pvCopy.addEventListener('click',function(){
+  if(!pvSrc||pvCopyBusy)return;
+  var done=function(ok){
+    pvCopyBusy=true;
+    pvCopyLabel.textContent=ok?'已复制':'复制失败';
+    setTimeout(function(){pvCopyBusy=false;pvCopyLabel.textContent='复制';},1400);
+  };
+  if(!navigator.clipboard||!window.ClipboardItem||!navigator.clipboard.write){done(false);return;}
+  var type='image/'+(/\.jpe?g$/i.test(pvSrc)?'jpeg':(/\.gif$/i.test(pvSrc)?'gif':'png'));
+  fetch(pvSrc,{mode:'cors'})
+    .then(function(r){if(!r.ok)throw 0;return r.blob();})
+    .then(function(b){
+      if(b.type==='image/png'&&window.ClipboardItem.supports&&ClipboardItem.supports('image/png')){
+        return navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(function(){return true;});
+      }
+      /* 非 PNG / 不支持直写：转码成 PNG 再写 */
+      return new Promise(function(res,rej){
+        var url=URL.createObjectURL(b),im=new Image();
+        im.onload=function(){
+          var c=document.createElement('canvas');
+          c.width=im.naturalWidth;c.height=im.naturalHeight;
+          c.getContext('2d').drawImage(im,0,0);
+          URL.revokeObjectURL(url);
+          c.toBlob(function(out){
+            if(!out){rej();return;}
+            navigator.clipboard.write([new ClipboardItem({'image/png':out})]).then(function(){res(true);},rej);
+          },'image/png');
+        };
+        im.onerror=function(){URL.revokeObjectURL(url);rej();};
+        im.src=url;
+      });
+    })
+    .then(function(r){done(r!==false);})
+    .catch(function(){done(false);});
+});
+/* 放大/还原：点图或点按钮都行 */
+pvZoom.addEventListener('click',function(){
+  if(!pvImg.naturalWidth)return;
+  pvZoomed=!pvZoomed;
+  pvApplyZoom();
+});
+pvImg.addEventListener('click',function(){if(pvImg.naturalWidth)pvZoom.click();});
 function openPicture(path){
-  /* 独占显示：先瞬时关掉阅读层与 404 层 */
+  /* 独占显示：先瞬时关掉阅读层、404 层与画廊 */
   readerLayer.hidden=true;readerLayer.classList.remove('show');
   nfLayer.hidden=true;nfLayer.classList.remove('show');
+  pgLayer.hidden=true;pgLayer.classList.remove('show');
   pvPath=path;pvTries=0;
   pvName.textContent=decodeURIComponent(path.split('/').pop()||path);
   pvErr.hidden=true;pvErrPath.textContent='';
   pvImg.style.display='none';pvImg.removeAttribute('src');
   pvDim.textContent='';
+  pvZoomed=false;pvApplyZoom();
+  pvDown.removeAttribute('href');pvDown.setAttribute('aria-disabled','true');
+  pvCopyLabel.textContent='复制';
   pvStage.classList.add('loading');
   pvLayer.hidden=false;overlay.hidden=false;
   requestAnimationFrame(function(){requestAnimationFrame(function(){
@@ -1992,7 +2420,7 @@ function tryLoadPicture(){
     return;
   }
   var src=assetUrl('pics/'+pvPath+PV_EXTS[pvTries++]);
-  pvRaw.href=src;
+  pvSrc=src;
   pvImg.onload=pictureOk;
   pvImg.onerror=tryLoadPicture;
   pvImg.src=src;
@@ -2002,25 +2430,99 @@ function pictureOk(){
   pvStage.classList.remove('loading');
   pvImg.style.display='';
   pvDim.textContent=pvImg.naturalWidth+' × '+pvImg.naturalHeight+' px';
+  /* 换图后回到适应窗口，避免上一张的放大态残留 */
+  pvZoomed=false;pvApplyZoom();
+  pvDown.href=pvSrc;
+  pvDown.setAttribute('download',pvFileName());
+  pvDown.removeAttribute('aria-disabled');
 }
 function closePicture(){
   if(pvLayer.hidden)return;
   pvLayer.classList.remove('show');
   setTimeout(function(){
-    pvLayer.hidden=true;overlay.hidden=readerLayer.hidden&&nfLayer.hidden;
+    pvLayer.hidden=true;overlay.hidden=readerLayer.hidden&&nfLayer.hidden&&pgLayer.hidden;
     pvImg.removeAttribute('src');pvImg.onerror=null;
     pvStage.classList.remove('loading');pvErr.hidden=true;
+    pvSrc='';pvZoomed=false;pvApplyZoom();
   },280);
 }
-el('pvClose').addEventListener('click',goHome);
+/* 关闭文件查看器：回到资料库（而不是首页）。
+ * 查看器只可能从画廊点进来，所以关闭的语义就是「退回上一层」。 */
+function closePictureToGallery(){nav('pictures');}
+el('pvClose').addEventListener('click',closePictureToGallery);
+
+/* ================= 资料库（/pictures） =================
+ * 「资料」= 站内可下载/查看的图片与图表集合，文章里引用的图、数据图都往这里放。
+ * 清单来自 pics/index.json（手工增删，顺序即展示顺序）；
+ * 缩略图用 item.thumb，缺省则回退原图。
+ * 点任一格 → /pictures/<file>，交给上面的文件查看器打开。
+ * 与阅读页/查看器共用 .reader 那唯一的一层玻璃：三者互斥显示，不增加模糊面片。 */
+var pgLayer=el('pgLayer'),pgGrid=el('pgGrid'),pgCount=el('pgCount'),pgLoaded=false;
+function openGallery(){
+  /* 独占显示：先瞬时关掉阅读层、404 层与查看器 */
+  readerLayer.hidden=true;readerLayer.classList.remove('show');
+  nfLayer.hidden=true;nfLayer.classList.remove('show');
+  pvLayer.hidden=true;pvLayer.classList.remove('show');
+  if(!pgLayer.hidden)return;
+  pgLayer.hidden=false;overlay.hidden=false;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    pgLayer.classList.add('show');overlay.classList.add('show');
+  })});
+  el('pgClose').focus();
+  loadGallery();
+}
+function loadGallery(){
+  if(pgLoaded)return;
+  pgLoaded=true;
+  pgGrid.innerHTML='<div class="pg-msg">正在加载…</div>';
+  fetch(assetUrl('pics/index.json'))
+    .then(function(r){if(!r.ok)throw 0;return r.json();})
+    .then(function(d){
+      var items=(d&&d.items)||[];
+      if(!items.length){pgGrid.innerHTML='<div class="pg-msg">还没有资料，去 pics/ 目录添加吧。</div>';return;}
+      pgCount.textContent=items.length+' 份';
+      pgGrid.innerHTML=items.map(function(it){
+        var t=it.title||it.file;
+        return '<button type="button" class="pg-item" data-file="'+escHtml(it.file)+'" title="'+escHtml(t)+'">'
+          +'<img loading="lazy" decoding="async" alt="'+escHtml(t)+'" src="'+assetUrl('pics/'+(it.thumb||it.file))+'">'
+          +'<span class="pg-cap">'+escHtml(t)+'</span></button>';
+      }).join('');
+    })
+    .catch(function(){
+      pgGrid.innerHTML='<div class="pg-msg">资料清单 pics/index.json 加载失败。</div>';
+    });
+}
+function closeGallery(){
+  if(pgLayer.hidden)return;
+  pgLayer.classList.remove('show');
+  setTimeout(function(){
+    pgLayer.hidden=true;
+    overlay.hidden=readerLayer.hidden&&nfLayer.hidden&&pvLayer.hidden;
+    pgGrid.scrollTop=0;
+  },280);
+}
+el('pgClose').addEventListener('click',goHome);
+el('picsPill').addEventListener('click',function(){nav('pictures');});
+pgGrid.addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('.pg-item'):null;
+  if(!b||!b.dataset.file)return;
+  /* 逐段编码：整串 encodeURIComponent 会把 / 变成 %2F */
+  nav('pictures/'+b.dataset.file.split('/').map(encodeURIComponent).join('/'));
+});
 
 /* ================= 路由 =================
- * 路径级路由（配合 Netlify _redirects 的 SPA 回退，真实文件优先于重写）：
+ * 路径级路由（全部由前端接管，pushState 无刷新切换）：
  *   /                    首页
- *   /articles/<id>       文章阅读页
- *   /pictures/<path>     图片查看器（查看 pics/<path> 的图片）
+ *   /articles/<id>       文章阅读层（fetch articles/<id>.json 渲染，带缓存）
+ *   /pictures/<path>     文件查看器（查看 pics/<path> 里的资料）
+ *   /pictures            资料库
  *   其他任何路径          404 页面
  * 兼容旧版哈希路由：#/post/<id> 原地升级为 /articles/<id>。
+ *
+ * 注意 articles/ 下有**真实文件**（index.json 与各篇 <id>.json），
+ * 所以 _redirects 里绝不能加 /articles/* 200 重写 ——
+ * Cloudflare 的 200 重写是无条件生效的，会把这些 JSON 一起顶成 HTML
+ * （曾真实出过这个事故）。详见 _redirects 里的警告注释。
  */
 function pathAfterBase(){
   var p;
@@ -2034,17 +2536,90 @@ function nav(path){
   handleRoute();
 }
 function goHome(){nav('');}
-function routePost(id){
-  postsReady.then(function(){
-    /* 等待期间路由可能又变了，校验一次 */
-    var cur=pathAfterBase().match(/^articles\/(.+)$/);
-    if(!cur||cur[1]!==id)return;
-    var p=null;
-    for(var i=0;i<posts.length;i++){if(posts[i].id===id){p=posts[i];break;}}
-    if(p){close404();closePicture();openArticle(p);}
-    else{closeArticle();closePicture();open404();}
-  });
+
+/* 从 URL 里取文章 id：容忍 .html 后缀与 URL 编码 */
+function postIdFromSeg(seg){
+  var m=seg.match(/^articles\/(.+)$/);
+  if(!m||!m[1])return null;
+  var id=m[1].replace(/\.html?$/i,'');
+  return id?id:null;
 }
+
+/* 拉取文章 JSON 并渲染阅读层。
+ * 为什么直接读 JSON 而不再绕静态页：单文件架构下正文就是一份 JSON，
+ * fetch 一次即得，再去 fetch HTML 拆 .reader-inner 属于纯开销——
+ * 那样每次点开文章都要下载整份 HTML（几十 KB）再解析一遍。
+ * 同一个 id 只拉一次并缓存，切回去零延迟。 */
+var postCache={};
+function fetchPost(id){
+  if(postCache[id])return Promise.resolve(postCache[id]);
+  return fetch(assetUrl('articles/'+encodeURIComponent(id)+'.json'))
+    .then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    })
+    .then(function(p){
+      p.id=p.id||id;
+      postCache[id]=p;
+      document.title=p.title+' · 海棠花下';
+      return p;
+    })
+    .catch(function(e){
+      delete postCache[id];
+      throw e;
+    });
+}
+
+function routePost(id){
+  /* 校验等待期间路由是否又变了 */
+  if(postIdFromSeg(pathAfterBase())!==id)return;
+  close404();closePicture();
+  fetchPost(id)
+    .then(function(p){
+      if(postIdFromSeg(pathAfterBase())!==id)return; /* 期间又跳走了 */
+      showArticle(p);
+    })
+    .catch(function(e){
+      console.warn('文章加载失败：'+id,e);
+      closeArticle();open404();
+    });
+}
+
+/* 渲染文章到阅读层。
+ * author 可选：缺省时回退站主「海棠花下」+ 头像 pics/avatar/avatar.jpg，
+ * 投稿文章用它自己的署名（posts/*.json 里的 author 字段）。 */
+function showArticle(p){
+  var au=p.author||{};
+  var auName=au.name||'海棠花下';
+  var auHome=au.home||'';
+  var auAvatar=au.avatar||'pics/avatar/avatar.jpg';
+  var chips=(p.tags||[]).map(function(t){return '<span class="chip">'+escHtml(t)+'</span>'}).join('');
+  readerBody.innerHTML='<div class="reader-inner">'
+    +'<h1 class="reader-title" id="readerTitle">'+escHtml(p.title)+'</h1>'
+    +'<div class="reader-credits">'
+      +'<div class="reader-avatar"><img data-asset="'+escHtml(auAvatar)+'" alt="头像"></div>'
+      +'<div class="reader-by">'
+        +'<span class="reader-name">'+escHtml(auName)+'</span>'
+        +(auHome?'<span class="reader-home">'+escHtml(auHome)+'</span>':'')
+      +'</div>'
+      +'<div class="reader-time">'
+        +'<span class="date">'+escHtml(p.date||'')+'</span>'
+        +'<span class="chips">'+chips+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="reader-content">'+(p.content||'')+'</div>'
+  +'</div>';
+  enhanceCodeBlocks(readerBody);
+  enhanceArticleContent(readerBody);
+  readerLayer.hidden=false;overlay.hidden=false;
+  /* 两次 rAF：等首帧把hidden 撤掉、浏览器算完初始布局，再加 .show 触发过渡。
+   * 只用一次会让浏览器把初始状态当成起始值，浮层不升起。 */
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    readerLayer.classList.add('show');overlay.classList.add('show');
+  })});
+  readerBody.scrollTop=0;
+}
+
 function handleRoute(){
   var seg=pathAfterBase();
   /* 旧哈希 #/post/<id> 原地升级为路径路由 */
@@ -2055,16 +2630,18 @@ function handleRoute(){
     history.replaceState(null,'',assetUrl('articles/'+lid));
     seg='articles/'+lid;
   }
-  var m;
-  if((m=seg.match(/^articles\/(.+)$/))&&m[1]){routePost(m[1]);return;}
-  if((m=seg.match(/^pictures\/(.+)$/))&&m[1]){closeArticle();close404();openPicture(m[1]);return;}
+  var id=postIdFromSeg(seg);
+  if(id){routePost(id);return;}
+  if((seg.match(/^pictures\/(.+)$/))){closeArticle();close404();closeGallery();openPicture(seg.replace(/^pictures\//,''));return;}
+  /* /pictures（尾斜杠由 pathAfterBase 剥掉）→ 画廊首屏 */
+  if(seg==='pictures'){closeArticle();close404();closePicture();openGallery();return;}
   if(seg===''){
     var h=location.hash||'';
     /* 根路径上的杂散哈希（非 #/ 与 #/post/）视为 404，与旧版行为一致 */
-    if(h&&h!=='#/'&&h!=='#'){closeArticle();closePicture();open404();return;}
-    closeArticle();close404();closePicture();return;
+    if(h&&h!=='#/'&&h!=='#'){closeArticle();closePicture();closeGallery();open404();return;}
+    closeArticle();close404();closePicture();closeGallery();return;
   }
-  closeArticle();closePicture();open404();
+  closeArticle();closePicture();closeGallery();open404();
 }
 
 /* ================= 事件委托 ================= */
@@ -2076,7 +2653,8 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
     if(!readerLayer.hidden)goHome();
     else if(!nfLayer.hidden)goHome();
-    else if(!pvLayer.hidden)goHome();
+    else if(!pvLayer.hidden)closePictureToGallery();
+    else if(!pgLayer.hidden)goHome();
     else if(npOpen)closeNP();
     else if(!searchPanel.hidden)closeSearch();
     else if(!flyout.hidden)closeFlyout();
@@ -2100,20 +2678,27 @@ document.addEventListener('pointerleave',function(e){
 },true);
 
 /* ================= 初始化 ================= */
-/* 先占位加载态，探测到站点根后：修正资源路径、应用设置、加载文章、路由 */
 el('postList').innerHTML='<div class="post-loading">正在加载…</div>';
 var postsReady=null;
 ensureBase().then(function(){
   fixAssets();
   injectFonts();
   applySettings(true);
+  /* 装载第一首放在这里（而不是文件中间那个顶层位置）：
+   * 深层路径首访时 BASE 要靠网络探测才知道，提前调用会拼出 "nullmusic/…"，
+   * 导致封面破图、歌词回退成 404 页 HTML、曲长显示 0:00。 */
+  muLoadTrack(0,false);
   postsReady=loadPosts();
   handleRoute();
   window.addEventListener('popstate',handleRoute);
   window.addEventListener('hashchange',handleRoute);
 });
 
-/* ================= 文章加载（方案 B：fetch 清单 + 逐篇正文） ================= */
+/* ================= 文章加载 ================= */
+/* 首页文章列表。
+ * 清单 articles/index.json 里带着 title/date/tags/excerpt/author，
+ * 所以首页只拉这一个文件就够了 —— 正文在 articles/<id>.json，
+ * 点卡片时才去拉那一份（fetchPost，带缓存）。 */
 function loadPosts(){
   var list=el('postList');
   list.innerHTML='<div class="post-loading">正在加载文章…</div>';
@@ -2123,28 +2708,14 @@ function loadPosts(){
       /* 顺序以 index.json 为准（想调文章顺序，改清单即可） */
       var items = (manifest.posts || []);
       if(!items.length){ list.innerHTML='<div class="post-empty">还没有文章，去 articles/ 目录添加吧。</div>'; return; }
-      /* 逐篇拉取正文 */
-      var seq = Promise.resolve();
-      var loaded = [];
-      items.forEach(function(meta){
-        seq = seq.then(function(){
-          return fetch(assetUrl('articles/'+meta.file))
-            .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-            .then(function(p){
-              p.id = p.id || meta.id;
-              loaded.push(p);
-            })
-            .catch(function(e){
-              console.warn('加载文章失败：'+meta.file, e);
-              loaded.push({ id:meta.id, title:meta.file, date:'', tags:['加载失败'],
-                excerpt:'这篇文章没能加载出来（'+e.message+'）。', content:'' });
-            });
+      /* 兼容旧清单：只有 {id, file} 没有元数据时，退回逐篇拉正文的老路。
+       * （只是防止手改清单后首页空白） */
+      if(items.some(function(m){return!m.title})){
+        return loadPostsLegacy(items).then(function(loaded){
+          posts=loaded;renderPosts();
         });
-      });
-      return seq.then(function(){
-        posts = loaded;
-        renderPosts();
-      });
+      }
+      posts=items;renderPosts();
     })
     .catch(function(e){
       /* 文章加载失败（部署损坏 / 服务异常等）：展示 404 页面而不是行内报错 */
@@ -2152,6 +2723,27 @@ function loadPosts(){
       posts = [];
       open404();
     });
+}
+
+/* 兜底路径：清单缺元数据时才走，逐篇拉 JSON 拼出列表所需字段。
+ * 只取列表字段，不缓存 content —— 打开文章时由 fetchPost 拉那一份。 */
+function loadPostsLegacy(items){
+  var loaded=[];
+  return items.reduce(function(seq,meta){
+    return seq.then(function(){
+      return fetch(assetUrl('articles/'+meta.file))
+        .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+        .then(function(p){
+          loaded.push({ id:p.id||meta.id, title:p.title, date:p.date,
+            tags:p.tags||[], excerpt:p.excerpt||'', author:p.author||null });
+        })
+        .catch(function(e){
+          console.warn('加载文章失败：'+meta.file, e);
+          loaded.push({ id:meta.id, title:meta.file, date:'', tags:['加载失败'],
+            excerpt:'这篇文章没能加载出来（'+e.message+'）。' });
+        });
+    });
+  },Promise.resolve()).then(function(){return loaded});
 }
 </script>
 </body>

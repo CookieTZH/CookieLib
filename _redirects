@@ -1,7 +1,28 @@
 # SPA 回退：文章路径路由 + 图片查看器
-# Netlify 规则：真实存在的文件优先于 200 重写，
-# 因此 /articles/*.json、/pics/* 等静态文件不受影响，照常直接返回。
-/articles/*    /index.html    200
-/articles      /index.html    200
-/pictures/*    /index.html    200
-/pictures      /index.html    200
+#
+# ⚠️ 平台已从 Netlify 换成 Cloudflare Pages，两者语义**相反**：
+#   Netlify：只有当请求的路径**不存在真实文件**时，才应用 200 重写。
+#   Cloudflare：200 重写**无条件生效**—— 只要前缀匹配上，
+#              该前缀下**所有真实文件**都会被替换成目标页面的 HTML
+#              （Content-Type 变成 text/html）。
+#
+# 所以下面这组规则是**针对 Cloudflare 写的**，不能照抄 Netlify 那套：
+#   · articles/ 与 pictures/ 下都有真实文件，/articles/* 200 会把
+#     articles/index.json 和各篇正文 JSON 一起顶成 HTML
+#     （曾真实出过这个事故：首页文章列表直接加载不出来）。
+#   · 解决办法：**只给没有同名真实文件的虚拟前缀加重写**。
+#     文章的虚拟路径是 /articles/<id>（干净地址，无扩展名），
+#     真实数据是 /articles/<id>.json —— 两者不同名，所以安全。
+#   · pictures/ 同理：真实图片在 /pics/，/pictures/* 只是查看器的虚拟前缀。
+#
+# 验证方法（改完务必逐个 curl 校验 content_type）：
+#   curl -sI https://cookielib.pages.dev/articles/index.json   | grep -i content-type
+#     → 必须是 application/json，被顶成 text/html 就是规则写错了
+#   curl -sI https://cookielib.pages.dev/posts/index.json      | grep -i content-type
+#     → 同理
+
+# ── 图片查看器 / 资料库 ──
+# 这两个是纯客户端路由（真实资源在 pics/，该前缀下没有同名真实文件），
+# 需要重写回站点根。关闭查看器时回退到「资料」页而不是首页，保持分层回退。
+/pictures/*    /    200
+/pictures      /    200

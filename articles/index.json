@@ -1,7 +1,57 @@
 {
   "posts": [
-    { "id": "haitang-travelogue", "file": "haitang-travelogue.json" },
-    { "id": "powershell-policy", "file": "powershell-policy.json" },
-    { "id": "submission-guide", "file": "submission-guide.json" }
+    {
+      "id": "how-people-read-web",
+      "file": "how-people-read-web.json",
+      "title": "人是怎么看网页的",
+      "date": "2026-10-01",
+      "tags": [
+        "投稿",
+        "设计",
+        "眼动研究"
+      ],
+      "excerpt": "F 型布局不是设计目标，而是一种失败信号；人其实不在“读”网页，而是在扫。把 NN/g 三十年的眼动研究串起来看，会发现一些和直觉相反的事。",
+      "author": {
+        "name": "xxt8582753",
+        "home": "xxtsoft.top · 服务器有概率炸",
+        "avatar": "pics/avatar/xxt.jpg"
+      }
+    },
+    {
+      "id": "haitang-travelogue",
+      "file": "haitang-travelogue.json",
+      "title": "海棠乡游记",
+      "date": "2026-09-27",
+      "tags": [
+        "随笔",
+        "游记"
+      ],
+      "excerpt": "时隔一年，我终于拿起真正属于我的笔，用眼睛看这个世界。",
+      "author": null
+    },
+    {
+      "id": "powershell-policy",
+      "file": "powershell-policy.json",
+      "title": "PowerShell 执行策略报错？一条命令解决",
+      "date": "2026-09-05",
+      "tags": [
+        "Windows",
+        "终端"
+      ],
+      "excerpt": "“在此系统上禁止运行脚本”不是病毒，也不是安装坏了——大概率只是执行策略在拦你。",
+      "author": null
+    },
+    {
+      "id": "submission-guide",
+      "file": "submission-guide.json",
+      "title": "如何给社团博客写稿与投稿",
+      "date": "2026-09-26",
+      "tags": [
+        "投稿",
+        "指南"
+      ],
+      "excerpt": "想给社团官网投稿却不知道从哪下手？从选题、写作到投稿格式，一篇讲清楚，附联系方式。",
+      "author": null
+    }
   ]
 }

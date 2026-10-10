@@ -4,12 +4,11 @@
   "description": "海棠花下 · Fluent Design 桌面化个人网站",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && node scripts/sync-404.mjs",
-    "preview": "vite preview",
-    "sync404": "node scripts/sync-404.mjs"
+    "build": "node scripts/sync-404.mjs",
+    "sync404": "node scripts/sync-404.mjs",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=cookielib --branch=production || node scripts/deploy-failed.mjs"
   },
   "devDependencies": {
-    "vite": "^5.4.0"
+    "wrangler": "^4.146.0"
   }
 }
